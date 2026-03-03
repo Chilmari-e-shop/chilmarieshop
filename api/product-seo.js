@@ -1,7 +1,6 @@
 // api/product-seo.js
 // Google/AI Bot এর জন্য Static HTML সার্ভ করে
-// Firebase Storage থেকে pre-generated HTML নিয়ে দেয়
-// Firestore Read = 0 ✅
+// Real User হলে সরাসরি সাইটে পাঠিয়ে দেয়
 
 export default async function handler(req, res) {
   const { id } = req.query;
@@ -15,17 +14,15 @@ export default async function handler(req, res) {
   // Google/AI Bot কিনা চেক করো
   const isBot = /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|WhatsApp|TelegramBot|Discordbot|GPTBot|ClaudeBot|anthropic|PerplexityBot|ChatGPT/i.test(userAgent);
 
-  // Real User হলে — কিছু করো না, main site দেখাবে (vercel catch-all করবে)
+  // --- ৩ নম্বর ধাপ: সাধারণ মানুষের জন্য লজিক ---
   if (!isBot) {
-    // index.html serve করো (Vercel catch-all এর মতো)
-    res.setHeader("Location", "/");
-    // Actually just let the page load normally
+    // মানুষ হলে তাকে সরাসরি ইনডেক্স পেজে পাঠিয়ে দাও যাতে SPA কাজ করে
+    // এবং URL পরিবর্তন না হয়
     return res.redirect(302, `/?_product=${id}`);
   }
 
   try {
-    // Firebase Storage থেকে pre-generated HTML নাও
-    // এটা Firestore Read নয় — Storage CDN Read (বিনামূল্যে প্রায়)
+    // বটের জন্য Firebase Storage থেকে pre-generated HTML নাও
     const storageUrl = `https://firebasestorage.googleapis.com/v0/b/chilmarieshop1.firebasestorage.app/o/seo-pages%2F${encodeURIComponent(id)}.html?alt=media`;
 
     const response = await fetch(storageUrl);

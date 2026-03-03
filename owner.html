@@ -3131,13 +3131,16 @@ const addImageUrlField = (url = '') => {
 document.getElementById('save-product-btn').addEventListener('click', async () => {
     const form = document.getElementById('product-form');
     if (!form.checkValidity()) { form.reportValidity(); return; }
+    
     showLoader();
 
     const productId = document.getElementById('product-id').value;
     const hasVariations = document.getElementById('product-has-variations').checked;
     const productName = document.getElementById('product-name').value.trim();
     
-    const mainImageUrls = Array.from(document.querySelectorAll('#product-image-urls-container .product-image-url-input')).map(input => input.value.trim()).filter(url => url);
+    const mainImageUrls = Array.from(document.querySelectorAll('#product-image-urls-container .product-image-url-input'))
+        .map(input => input.value.trim())
+        .filter(url => url);
 
     let productData = {
         name: productName,
@@ -3150,48 +3153,31 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
         basePrice: parseFloat(document.getElementById('product-price').value),
         isDigital: document.getElementById('product-is-digital')?.checked || false,
         needsUID: document.getElementById('product-needs-uid')?.checked || false,
+        updatedAt: new Date().toISOString()
     };
 
-    // 🔥 FIX: Complete variation handling
     if (hasVariations) {
         const variationTypes = [];
         const variationCombinations = [];
-        
-        // Get variation types and options
         document.querySelectorAll('.variation-type-group').forEach(group => {
             const type = group.querySelector('.variation-type-input').value.trim();
             const options = group.querySelector('.variation-options-input').value.trim().split(',').map(o => o.trim()).filter(o => o);
-            if (type && options.length > 0) {
-                variationTypes.push({ type, options });
-            }
+            if (type && options.length > 0) variationTypes.push({ type, options });
         });
-        
-        // Get variation combinations with price and stock
         document.querySelectorAll('.combination-row').forEach(row => {
             const price = parseFloat(row.querySelector('.combo-price').value);
             const stock = parseInt(row.querySelector('.combo-stock').value);
-            
             const combination = {};
             row.querySelectorAll('.combo-name').forEach(span => {
-                const type = span.dataset.type;
-                const value = span.dataset.value;
-                combination[type] = value;
+                combination[span.dataset.type] = span.dataset.value;
             });
-            
-            if (price && stock !== undefined) {
-                variationCombinations.push({ combination, price, stock });
-            }
+            if (!isNaN(price)) variationCombinations.push({ combination, price, stock });
         });
-        
         productData.variations = variationTypes;
         productData.variationCombinations = variationCombinations;
-        
-        // Calculate total stock from all variations
-        productData.stock = variationCombinations.reduce((sum, v) => sum + v.stock, 0);
-        productData.price = productData.basePrice; // Keep base price as default
-        
+        productData.stock = variationCombinations.reduce((sum, v) => sum + (v.stock || 0), 0);
+        productData.price = productData.basePrice;
     } else {
-        // No variations
         productData.price = productData.basePrice;
         productData.stock = parseInt(document.getElementById('product-stock').value) || 0;
         productData.variations = [];
@@ -3200,31 +3186,28 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
 
     try {
         let finalId = productId;
-
         if (productId) {
-            // পুরাতন প্রোডাক্ট আপডেট
             await setDoc(doc(db, "products", productId), productData, { merge: true });
-            showToast('Product updated successfully!');
+            showToast('✅ Product updated successfully!');
         } else {
-            // নতুন প্রোডাক্ট অ্যাড
             productData.createdAt = serverTimestamp();
             productData.avgRating = 0;
             productData.reviewCount = 0;
             const docRef = await addDoc(collection(db, "products"), productData);
-            finalId = docRef.id; // সুপাবেসের জন্য আইডি নিলাম
-            showToast('Product added successfully!');
+            finalId = docRef.id;
+            showToast('✅ Product added successfully!');
         }
 
-        // --- সুপাবেসে ডাটা পাঠানোর ফাংশন ---
-        await syncProductToSupabase(finalId, productData); 
-        // --- Google/AI Bot এর জন্য Static SEO Page বানাও ---
-        await generateSEOPage(finalId, productData);
+        // --- ব্যাকগ্রাউন্ড টাস্ক (এগুলো লোডিং আটকাবে না) ---
+        syncProductToSupabase(finalId, productData).catch(e => console.log("Supabase sync failed"));
+        generateSEOPage(finalId, productData).catch(e => console.log("SEO page failed"));
 
         closeModal(productModal);
-        fetchProducts('first');
+        if (typeof fetchProducts === 'function') fetchProducts('first');
+        
     } catch (e) { 
         console.error("Error saving product: ", e); 
-        showToast('Failed to save product.', 'error'); 
+        showToast('❌ Error: ' + e.message, 'error'); 
     } finally { 
         hideLoader(); 
     }
