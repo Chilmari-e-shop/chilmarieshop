@@ -1,0 +1,28 @@
+{
+  "rewrites": [
+    {
+      "source": "/__/auth/(.*)",
+      "destination": "https://chilmarieshop1.firebaseapp.com/__/auth/$1"
+    },
+    {
+      "source": "/admin",
+      "destination": "/owner-penel.html"
+    },
+    {
+      "source": "/rider",
+      "destination": "/reder.html"
+    },
+    {
+      "source": "/sitemap-dynamic.xml",
+      "destination": "/api/sitemap-dynamic"
+    },
+    {
+      "source": "/product-view/:id",
+      "destination": "/api/product-seo?id=:id"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
