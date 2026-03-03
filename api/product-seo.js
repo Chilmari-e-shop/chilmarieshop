@@ -1,45 +1,55 @@
 // api/product-seo.js
-// Google/AI Bot এর জন্য Static HTML সার্ভ করে
-// Real User হলে সরাসরি সাইটে পাঠিয়ে দেয়
-
 export default async function handler(req, res) {
   const { id } = req.query;
+  const projectId = "chilmarieshop1"; 
 
-  if (!id) {
-    return res.redirect(302, "https://www.chilmarieshop.top/");
-  }
+  if (!id) return res.redirect(302, "/");
 
   const userAgent = req.headers["user-agent"] || "";
+  const isBot = /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|WhatsApp|TelegramBot|Discordbot|GPTBot|ClaudeBot/i.test(userAgent);
 
-  // Google/AI Bot কিনা চেক করো
-  const isBot = /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|WhatsApp|TelegramBot|Discordbot|GPTBot|ClaudeBot|anthropic|PerplexityBot|ChatGPT/i.test(userAgent);
-
-  // --- ৩ নম্বর ধাপ: সাধারণ মানুষের জন্য লজিক ---
   if (!isBot) {
-    // মানুষ হলে তাকে সরাসরি ইনডেক্স পেজে পাঠিয়ে দাও যাতে SPA কাজ করে
-    // এবং URL পরিবর্তন না হয়
     return res.redirect(302, `/?_product=${id}`);
   }
 
   try {
-    // বটের জন্য Firebase Storage থেকে pre-generated HTML নাও
-    const storageUrl = `https://firebasestorage.googleapis.com/v0/b/chilmarieshop1.firebasestorage.app/o/seo-pages%2F${encodeURIComponent(id)}.html?alt=media`;
+    // সরাসরি Firestore Database থেকে তথ্য আনা
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/products/${id}`;
+    const response = await fetch(firestoreUrl);
 
-    const response = await fetch(storageUrl);
+    if (!response.ok) return res.redirect(302, "/");
 
-    if (!response.ok) {
-      // SEO page না পেলে homepage এ পাঠাও
-      return res.redirect(302, "https://www.chilmarieshop.top/");
-    }
+    const data = await response.json();
+    const f = data.fields;
 
-    const html = await response.text();
+    const name = f.name?.stringValue || "Chilmari E Shop";
+    const desc = f.description?.stringValue || "";
+    const price = f.basePrice?.doubleValue || f.basePrice?.integerValue || f.price?.stringValue || "0";
+    const image = f.imageUrl?.stringValue || "https://www.chilmarieshop.top/favicon.png";
+
+    const html = `<!DOCTYPE html>
+    <html lang="bn">
+    <head>
+      <meta charset="UTF-8">
+      <title>${name} - Chilmari E Shop</title>
+      <meta name="description" content="${desc.substring(0, 160)}">
+      <meta property="og:title" content="${name}">
+      <meta property="og:description" content="মূল্য: ৳${price}। ${desc.substring(0, 100)}">
+      <meta property="og:image" content="${image}">
+      <meta property="og:type" content="product">
+      <meta name="twitter:card" content="summary_large_image">
+    </head>
+    <body>
+      <h1>${name}</h1>
+      <img src="${image}" alt="${name}">
+      <p>${desc}</p>
+      <p>Price: ৳${price}</p>
+    </body>
+    </html>`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=3600"); // ১ ঘণ্টা cache
-    return res.send(html);
-
+    return res.status(200).send(html);
   } catch (err) {
-    console.error("Product SEO error:", err);
-    return res.redirect(302, "https://www.chilmarieshop.top/");
+    return res.redirect(302, "/");
   }
 }
