@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/__/auth/(.*)",
+      "destination": "https://chilmarieshop1.firebaseapp.com/__/auth/$1"
+    },
+    { "source": "/admin", "destination": "/owner.html" },
+    { "source": "/rider", "destination": "/reder.html" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap-dynamic" },
+    { "source": "/product-view/:id", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
