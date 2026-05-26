@@ -1,5 +1,3 @@
-import { next } from '@vercel/edge';
-
 export default function middleware(request) {
   const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
   
@@ -14,15 +12,15 @@ export default function middleware(request) {
   if (isBot) {
     const url = new URL(request.url);
     const PRERENDER_TOKEN = '2PLnWAUKiuBSomR1R4O2'; 
-    
     const prerenderUrl = `https://service.prerender.io/${url.href}`;
 
     return fetch(prerenderUrl, {
-      headers: {
-        'X-Prerender-Token': PRERENDER_TOKEN
-      }
+      headers: { 'X-Prerender-Token': PRERENDER_TOKEN }
     });
   }
 
-  return next();
+  // কোনো ইমপোর্ট ছাড়া সাধারণ রেসপন্স
+  return new Response(null, {
+    headers: { 'x-middleware-next': '1' }
+  });
 }
