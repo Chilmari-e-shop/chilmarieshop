@@ -4119,63 +4119,52 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
     const renderSupportLinks = (links = {}) => { const container = document.getElementById('support-links-container'); const linkData = [ { key: 'whatsapp', name: 'WhatsApp', icon: 'fab fa-whatsapp', color: '#25D366', text: 'Chat with us directly' }, { key: 'facebook', name: 'Facebook', icon: 'fab fa-facebook-messenger', color: '#00B2FF', text: 'Message our page' }, { key: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', color: '#E4405F', text: 'Follow us for updates' }, { key: 'telegram', name: 'Telegram', icon: 'fab fa-telegram-plane', color: '#229ED9', text: 'Join our community' }, { key: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', color: '#FF0000', text: 'Watch our videos' }, { key: 'mediafire', name: 'Download Our App', icon: 'fas fa-mobile-alt', color: '#1175E8', text: 'Get the full experience' }, ]; let html = linkData.map(link => (links[link.key] ? `<a href="${escapeHtml(links[link.key])}" target="_blank" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100"><i class="${link.icon} text-3xl" style="color: ${link.color};"></i><div><p class="font-semibold text-gray-800">${link.name}</p><p class="text-xs text-gray-500">${link.text}</p></div></a>` : '')).join(''); container.innerHTML = html || '<p class="text-center text-gray-500">Support links will be available soon.</p>'; };
     const renderAboutUs = (about = {}) => { const container = document.getElementById('about-us-content'); if (about && about.content) { const formattedContent = about.content.split('\n').map(p => `<p>${escapeHtml(p)}</p>`).join(''); container.innerHTML = `<h2 class="text-2xl font-bold mb-4">${escapeHtml(about.title || 'About Us')}</h2><div class="prose max-w-none text-gray-600 space-y-4">${formattedContent}</div>`; } else { container.innerHTML = '<p class="text-center text-gray-500 py-16">Information about us is coming soon!</p>'; } };
     
-    const startCountdown = async () => { 
-        const timerEl = document.getElementById('countdown-timer'); 
-        if(!timerEl) return; 
+    // Home countdown timer — onSnapshot দিয়ে real-time Firebase sync
+    let homeCountdownInterval = null;
 
-        // Firebase থেকে real endTime আনো
-        let targetTime = 0;
-        try {
-            const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
-            if (fsDoc.exists()) {
-                const d = fsDoc.data();
-                const isActive = d.active === true || d.active === 'true';
-                if (isActive && d.endTime) {
-                    // Firestore Timestamp বা number দুটোই handle
-                    if (typeof d.endTime.toMillis === 'function') {
-                        targetTime = d.endTime.toMillis();
-                    } else if (typeof d.endTime === 'number') {
-                        targetTime = d.endTime;
-                    }
-                    if (targetTime > Date.now()) {
-                        localStorage.setItem('flashSaleEndTime', String(targetTime));
-                    } else {
-                        targetTime = 0; // expired হলে 0
-                    }
-                }
-            }
-        } catch(e) {}
+    const startCountdown = () => {
+        const timerEl = document.getElementById('countdown-timer');
+        if (!timerEl) return;
 
-        // Firebase থেকে না পেলে localStorage fallback
-        if (!targetTime) {
-            const stored = parseInt(localStorage.getItem('flashSaleEndTime')) || 0;
-            targetTime = stored > Date.now() ? stored : 0;
-        }
-
-        // Expired বা নেই → timer 00:00:00 দেখাও
-        if (!targetTime || targetTime < Date.now()) {
+        const showZero = () => {
             timerEl.innerHTML = '<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>';
-            return;
-        }
-
-        const updateTimer = () => {
-            const now = Date.now();
-            let diff = Math.floor((targetTime - now) / 1000);
-
-            if (diff <= 0) {
-                timerEl.innerHTML = '<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>';
-                return;
-            }
-
-            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
-            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-            const s = String(diff % 60).padStart(2, '0');
-            
-            timerEl.innerHTML = `<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${h}</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${m}</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${s}</span>`;
+            if (homeCountdownInterval) { clearInterval(homeCountdownInterval); homeCountdownInterval = null; }
         };
 
-        updateTimer();
-        setInterval(updateTimer, 1000); 
+        // Real-time Firebase listener — admin ON/OFF করলে সাথে সাথে update হবে
+        onSnapshot(doc(db, 'settings', 'flashSale'), (fsDoc) => {
+            if (homeCountdownInterval) { clearInterval(homeCountdownInterval); homeCountdownInterval = null; }
+
+            if (!fsDoc.exists()) { showZero(); return; }
+
+            const d = fsDoc.data();
+            const isActive = d.active === true || d.active === 'true';
+
+            let targetTime = 0;
+            if (d.endTime) {
+                if (typeof d.endTime.toMillis === 'function') {
+                    targetTime = d.endTime.toMillis();
+                } else if (typeof d.endTime === 'number') {
+                    targetTime = d.endTime;
+                }
+            }
+
+            const isExpired = targetTime > 0 && targetTime < Date.now();
+
+            if (!isActive || isExpired || !targetTime) { showZero(); return; }
+
+            // Timer চালু
+            const updateTimer = () => {
+                const diff = Math.floor((targetTime - Date.now()) / 1000);
+                if (diff <= 0) { showZero(); return; }
+                const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                const s = String(diff % 60).padStart(2, '0');
+                timerEl.innerHTML = `<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${h}</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${m}</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${s}</span>`;
+            };
+            updateTimer();
+            homeCountdownInterval = setInterval(updateTimer, 1000);
+        });
     };
 
     // ── Flash Sale Page ──────────────────────────────────────────────
