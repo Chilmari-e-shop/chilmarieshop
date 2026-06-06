@@ -4131,21 +4131,30 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
                 const d = fsDoc.data();
                 const isActive = d.active === true || d.active === 'true';
                 if (isActive && d.endTime) {
-                    targetTime = d.endTime.toMillis();
-                    localStorage.setItem('flashSaleEndTime', targetTime);
+                    // Firestore Timestamp বা number দুটোই handle
+                    if (typeof d.endTime.toMillis === 'function') {
+                        targetTime = d.endTime.toMillis();
+                    } else if (typeof d.endTime === 'number') {
+                        targetTime = d.endTime;
+                    }
+                    if (targetTime > Date.now()) {
+                        localStorage.setItem('flashSaleEndTime', String(targetTime));
+                    } else {
+                        targetTime = 0; // expired হলে 0
+                    }
                 }
             }
         } catch(e) {}
 
         // Firebase থেকে না পেলে localStorage fallback
         if (!targetTime) {
-            targetTime = parseInt(localStorage.getItem('flashSaleEndTime')) || 0;
+            const stored = parseInt(localStorage.getItem('flashSaleEndTime')) || 0;
+            targetTime = stored > Date.now() ? stored : 0;
         }
 
-        // যদি expired বা নেই তাহলে timer লুকাও
-        const hotDealsSection = document.querySelector('.hot-deals-section, #hot-deals-section');
+        // Expired বা নেই → timer 00:00:00 দেখাও
         if (!targetTime || targetTime < Date.now()) {
-            timerEl.innerHTML = '<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">--</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">--</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">--</span>';
+            timerEl.innerHTML = '<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>';
             return;
         }
 
@@ -4207,24 +4216,51 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
 
         try {
             const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
+            
+            // Helper: timer কে 00:00:00 এ reset করো
+            const resetFSTimer = () => {
+                const timerEl = document.getElementById('fs-countdown-timer');
+                const statusEl = document.getElementById('fs-status-badge');
+                if (timerEl) timerEl.innerHTML = '<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>';
+                if (statusEl) statusEl.textContent = 'ENDED';
+                if (fsCountdownInterval) { clearInterval(fsCountdownInterval); fsCountdownInterval = null; }
+            };
+
             if (!fsDoc.exists()) {
+                resetFSTimer();
                 loading.innerHTML = '';
                 empty.classList.remove('hidden');
                 return;
             }
+
             const fsData = fsDoc.data();
-            // active হতে পারে boolean true বা string "true"
+            // active boolean true বা string "true" দুটোই handle করো
             const isActive = fsData.active === true || fsData.active === 'true';
-            // endTime শেষ হয়ে গেলেও inactive ধরব
-            const endTime = fsData.endTime ? fsData.endTime.toMillis() : 0;
+
+            // endTime — Firestore Timestamp বা number দুটোই handle করো
+            let endTime = 0;
+            if (fsData.endTime) {
+                if (typeof fsData.endTime.toMillis === 'function') {
+                    endTime = fsData.endTime.toMillis();
+                } else if (typeof fsData.endTime === 'number') {
+                    endTime = fsData.endTime;
+                }
+            }
+
             const isExpired = endTime > 0 && endTime < Date.now();
 
             if (!isActive || isExpired) {
+                resetFSTimer();
                 loading.innerHTML = '';
                 empty.classList.remove('hidden');
                 return;
             }
+
+            // Timer চালু করো
             startFlashSaleCountdown(endTime || Date.now() + 3600000);
+
+            // Home এর countdown timer ও same endTime দিয়ে চালু করো
+            localStorage.setItem('flashSaleEndTime', String(endTime));
 
             const productIds = fsData.productIds || [];
             if (productIds.length === 0) {
@@ -4232,9 +4268,6 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
                 empty.classList.remove('hidden');
                 return;
             }
-
-            // Home countdown timer ও Firebase endTime দিয়ে update করো
-            localStorage.setItem('flashSaleEndTime', endTime);
 
             const productPromises = productIds.slice(0, 50).map(pid => getDoc(doc(db, 'products', pid)));
             const snaps = await Promise.all(productPromises);
