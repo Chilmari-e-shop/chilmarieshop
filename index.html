@@ -315,6 +315,10 @@ Kurigram online shop,
         .notif-bell-pulse { animation: notifPulse 0.6s ease-in-out 3; }
         .content-area { padding-bottom: 70px; }
         
+        /* Product Badge Blinking */
+        @keyframes badgeBlink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.7;transform:scale(1.08);} }
+        .product-badge { animation: badgeBlink 1.2s ease-in-out infinite; z-index: 5; }
+        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background-color: white; border-radius: 8px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
@@ -826,7 +830,7 @@ Kurigram online shop,
                             <span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>
                         </div>
                     </div>
-                    <a href="#" class="text-sm text-primary-color font-semibold">View All →</a>
+                    <a href="#" onclick="event.preventDefault(); window.showSection('flash-sale')" class="text-sm text-primary-color font-semibold">View All →</a>
                 </div>
             </div>
             <div class="container mx-auto p-2">
@@ -1269,6 +1273,13 @@ Kurigram online shop,
                         </div>
                         <i class="fas fa-chevron-right text-xs text-gray-500"></i>
                     </div>
+                    <div id="official-portal-option" class="hidden items-center justify-between cursor-pointer" onclick="window.openOfficialPortal()">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-globe text-gray-600 text-lg"></i>
+                            <h3 class="font-medium text-gray-800">Official Portal</h3>
+                        </div>
+                        <i class="fas fa-external-link-alt text-xs text-gray-500"></i>
+                    </div>
                  </div>
             </div>
             <div class="container mx-auto p-4 hidden" id="edit-profile-view">
@@ -1317,6 +1328,29 @@ Kurigram online shop,
                 <div id="wishlist-products-container" class="products-grid grid gap-2 mt-2"></div>
                 <div id="wishlist-empty-view" class="hidden text-center py-16">
                     <p class="text-gray-500">Your wishlist is empty</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flash Sale Page Section -->
+        <section id="flash-sale-section" class="section fade-in bg-light">
+            <div class="bg-red-600 text-white p-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg font-bold">⚡ Flash Sale</span>
+                    <div id="fs-countdown-timer" class="flex gap-1 text-sm ml-2">
+                        <span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:
+                        <span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:
+                        <span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>
+                    </div>
+                </div>
+                <span id="fs-status-badge" class="text-xs bg-white text-red-600 px-2 py-1 rounded-full font-bold">LIVE</span>
+            </div>
+            <div class="container mx-auto p-2">
+                <div id="flash-sale-products-container" class="products-grid grid gap-2 mt-2"></div>
+                <div id="flash-sale-loading" class="products-grid grid gap-2"></div>
+                <div id="no-flash-sale-products" class="hidden text-center py-16">
+                    <i class="fas fa-bolt text-5xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-600">কোনো Flash Sale চলছে না।</p>
                 </div>
             </div>
         </section>
@@ -2339,7 +2373,7 @@ document.getElementById('full-search-input').addEventListener('input', debounce(
         document.getElementById('header-back-button').style.visibility = history.length > 1 ? 'visible' : 'hidden';
         
         let title = activeNavItem ? activeNavItem.dataset.title : storeSettings.storeName;
-        const titleMap = { 'product-view': 'Product Details', 'search': 'Search Results', 'notifications': 'Notifications', 'support': 'Support', 'checkout': 'Checkout', 'about-us': 'About Us', 'campaign-page': 'Campaign', 'all-reviews': 'All Reviews' };
+        const titleMap = { 'product-view': 'Product Details', 'search': 'Search Results', 'notifications': 'Notifications', 'support': 'Support', 'checkout': 'Checkout', 'about-us': 'About Us', 'campaign-page': 'Campaign', 'all-reviews': 'All Reviews', 'flash-sale': '⚡ Flash Sale' };
         if (titleMap[sectionId]) title = titleMap[sectionId];
         document.getElementById('header-title').textContent = title;
 
@@ -2375,6 +2409,7 @@ document.getElementById('full-search-input').addEventListener('input', debounce(
             case 'support': renderSupportLinks(storeSettings.supportLinks); window.scrollTo(0, 0); break;
             case 'about-us': renderAboutUs(storeSettings.aboutUs); window.scrollTo(0, 0); break;
             case 'all-reviews': if(param) renderAllReviewsPage(param); window.scrollTo(0, 0); break;
+            case 'flash-sale': renderFlashSalePage(); window.scrollTo(0, 0); break;
         }
     };
 
@@ -2540,6 +2575,10 @@ document.getElementById('full-search-input').addEventListener('input', debounce(
                     }
                 });
             }
+            // ✅ Direct products (Flash Sale style) also included
+            if (campaign.directProductIds && Array.isArray(campaign.directProductIds)) {
+                allowedProductIds = [...allowedProductIds, ...campaign.directProductIds];
+            }
             
             allowedProductIds = [...new Set(allowedProductIds)];
 
@@ -2606,10 +2645,25 @@ const renderProductCard = (id, data) => {
         }
     }
 
+    // --- Badge HTML ---
+    let badgeHtml = '';
+    if (data.badge) {
+        const badgeColors = {
+            'SALE': 'bg-red-500',
+            'OFFER': 'bg-orange-500',
+            'HOT DEAL': 'bg-yellow-500',
+            'NEW': 'bg-green-500',
+            'POPULAR': 'bg-blue-500',
+        };
+        const badgeColor = badgeColors[data.badge] || 'bg-red-500';
+        badgeHtml = `<span class="product-badge absolute top-2 left-2 ${badgeColor} text-white text-[10px] font-bold px-1.5 py-0.5 rounded">${escapeHtml(data.badge)}</span>`;
+    }
+
     return `
     <div class="product-card" onclick="window.viewProduct('${id}')">
         <div class="h-40 bg-gray-100 relative">
             <img src="${escapeHtml(currentImage)}" alt="${escapeHtml(data.name)}" class="w-full h-full object-cover" loading="lazy">
+            ${badgeHtml}
             <button class="absolute top-2 right-2 text-2xl wishlist-btn ${isInWishlist ? 'text-red-500' : 'text-gray-300'}" data-productid="${id}" onclick="event.stopPropagation(); window.toggleWishlist('${id}')">
                 <i class="wishlist-btn-icon ${isInWishlist ? 'fas' : 'far'} fa-heart"></i>
             </button>
@@ -4095,6 +4149,113 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
         updateTimer();
         setInterval(updateTimer, 1000); 
     };
+
+    // ── Flash Sale Page ──────────────────────────────────────────────
+    let fsCountdownInterval = null;
+
+    const startFlashSaleCountdown = (endTime) => {
+        const timerEl = document.getElementById('fs-countdown-timer');
+        const statusEl = document.getElementById('fs-status-badge');
+        if (!timerEl) return;
+        if (fsCountdownInterval) clearInterval(fsCountdownInterval);
+
+        const update = () => {
+            const now = Date.now();
+            let diff = Math.floor((endTime - now) / 1000);
+            if (diff <= 0) {
+                timerEl.innerHTML = `<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>`;
+                if (statusEl) statusEl.textContent = 'ENDED';
+                clearInterval(fsCountdownInterval);
+                return;
+            }
+            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            timerEl.innerHTML = `<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">${h}</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">${m}</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">${s}</span>`;
+            if (statusEl) statusEl.textContent = 'LIVE';
+        };
+        update();
+        fsCountdownInterval = setInterval(update, 1000);
+    };
+
+    const renderFlashSalePage = async () => {
+        const container = document.getElementById('flash-sale-products-container');
+        const loading = document.getElementById('flash-sale-loading');
+        const empty = document.getElementById('no-flash-sale-products');
+        container.innerHTML = '';
+        empty.classList.add('hidden');
+        loading.innerHTML = renderSkeletonLoader(4);
+
+        try {
+            const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
+            if (!fsDoc.exists() || !fsDoc.data().active) {
+                loading.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            const fsData = fsDoc.data();
+            const endTime = fsData.endTime ? fsData.endTime.toMillis() : Date.now() + 3600000;
+            startFlashSaleCountdown(endTime);
+
+            const productIds = fsData.productIds || [];
+            if (productIds.length === 0) {
+                loading.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            // Also update home countdown timer endTime
+            localStorage.setItem('flashSaleEndTime', endTime);
+
+            const productPromises = productIds.slice(0, 50).map(pid => getDoc(doc(db, 'products', pid)));
+            const snaps = await Promise.all(productPromises);
+            const products = snaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+
+            loading.innerHTML = '';
+            if (products.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            container.innerHTML = products.map(p => renderProductCard(p.id, p)).join('');
+
+        } catch (err) {
+            console.error('Flash sale page error:', err);
+            loading.innerHTML = '<p class="text-center text-red-400 py-10">লোড করা যায়নি।</p>';
+        }
+    };
+
+    // ── Official Portal ──────────────────────────────────────────────
+    window.openOfficialPortal = async () => {
+        try {
+            const docSnap = await getDoc(doc(db, 'settings', 'siteConfig'));
+            if (docSnap.exists()) {
+                const url = docSnap.data()?.storeSettings?.portalUrl || docSnap.data()?.portalUrl;
+                if (url) { window.open(url, '_blank'); return; }
+            }
+        } catch(e) {}
+        showToast('Portal link set করা হয়নি।', '#ef4444');
+    };
+
+    // Load portal option visibility from settings
+    const loadPortalOption = async () => {
+        try {
+            const docSnap = await getDoc(doc(db, 'settings', 'siteConfig'));
+            if (docSnap.exists()) {
+                const url = docSnap.data()?.storeSettings?.portalUrl || docSnap.data()?.portalUrl;
+                const el = document.getElementById('official-portal-option');
+                if (el) {
+                    if (url) {
+                        el.classList.remove('hidden');
+                        el.style.display = 'flex';
+                    } else {
+                        el.classList.add('hidden');
+                        el.style.display = 'none';
+                    }
+                }
+            }
+        } catch(e) {}
+    };
+    loadPortalOption();
     
     const ptrSpinner = document.getElementById('pull-to-refresh-spinner'); const contentArea = document.querySelector('main.content-area'); let startY = 0, isRefreshing = false;
     

@@ -1117,6 +1117,11 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688 0-1.25-.562-1.25-1.25s.562-1.25 1.25-1.25 1.25.562 1.25 1.25-.562 1.25-1.25 1.25zM10.34 15.84L6.16 13.35a1.25 1.25 0 010-2.17l4.18-2.49m.84 6.15l4.18 2.49a1.25 1.25 0 001.68-.97V8.58a1.25 1.25 0 00-1.68-.97l-4.18 2.49m-4.18-2.49a1.25 1.25 0 00-1.68.97v4.18c0 .8.75 1.34 1.68.97l4.18-2.49" /></svg>
                     <span>Campaign Pages</span>
                 </a>
+                <!-- FLASH SALE LINK -->
+                <a href="#flash-sale-mgmt" class="nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                    <span>Flash Sale</span>
+                </a>
                  <a href="#coupons" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h3m-3 0h-1.5m2.14-9.36c.218-.304.496-.563.806-.762L12 4.5l2.648 1.638a1.87 1.87 0 01.806.762 1.87 1.87 0 010 1.884l-1.293 2.048a1.87 1.87 0 01-1.612.966H9.87a1.87 1.87 0 01-1.612-.966L7.022 9.248a1.87 1.87 0 010-1.884z" /></svg>
                     <span>Coupons</span>
@@ -1460,6 +1465,51 @@
                     </table>
                 </div>
             </section>
+<!-- Flash Sale Management Page -->
+<section id="flash-sale-mgmt" class="page">
+    <div class="page-header"><h1>⚡ Flash Sale Management</h1></div>
+
+    <!-- Flash Sale Settings Card -->
+    <div class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-bottom:1rem;">Flash Sale Settings</h2>
+        <div class="form-field">
+            <label>Status</label>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="radio" name="fs-status" id="fs-active-yes" value="true"> Active (চালু)
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="radio" name="fs-status" id="fs-active-no" value="false" checked> Inactive (বন্ধ)
+                </label>
+            </div>
+        </div>
+        <div class="form-field">
+            <label for="fs-end-datetime">End Date & Time (Flash Sale কতক্ষণ চলবে)</label>
+            <input type="datetime-local" id="fs-end-datetime" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color);color:var(--text-color);width:100%;max-width:320px;">
+        </div>
+        <button class="btn btn-primary" onclick="saveFlashSaleSettings()" style="margin-top:0.5rem;">💾 Save Settings</button>
+        <div id="fs-settings-status" style="margin-top:0.5rem;font-size:0.85rem;color:#10b981;display:none;">Settings saved!</div>
+    </div>
+
+    <!-- Product Search & Add -->
+    <div class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-bottom:1rem;">Flash Sale এ Product যোগ করুন</h2>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="fs-product-search-input" placeholder="Product নাম দিয়ে খুঁজুন..." style="flex:1;min-width:200px;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color);color:var(--text-color);">
+            <button class="btn btn-primary" onclick="searchProductsForFS()">🔍 Search</button>
+        </div>
+        <div id="fs-search-results" style="margin-top:1rem;"></div>
+    </div>
+
+    <!-- Current Flash Sale Products -->
+    <div class="card">
+        <h2 style="margin-bottom:1rem;">Flash Sale এ আছে এমন Products <span id="fs-product-count" style="font-size:0.85rem;color:#6b7280;">(0টি)</span></h2>
+        <div id="fs-current-products" style="display:grid;gap:10px;">
+            <p style="color:var(--text-muted);text-align:center;padding:2rem;">লোড হচ্ছে...</p>
+        </div>
+    </div>
+</section>
+
 <!-- Reviews Page Section -->
 <section id="reviews" class="page">
     <div class="page-header"><h1>Product Reviews</h1></div>
@@ -1575,6 +1625,15 @@
                         <div class="form-field">
                             <label for="nagad-number">🟠 Nagad নম্বর</label>
                             <input type="tel" id="nagad-number" name="nagadNumber" placeholder="01XXXXXXXXX">
+                        </div>
+                        
+                        <!-- OFFICIAL PORTAL URL -->
+                        <hr style="margin: 2rem 0; border: 1px solid var(--border-color);">
+                        <h2>🌐 Official Portal Link</h2>
+                        <p style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">Account page এ "Official Portal" option এ click করলে এই URL এ যাবে।</p>
+                        <div class="form-field">
+                            <label for="portal-url">Portal URL</label>
+                            <input type="url" id="portal-url" name="portalUrl" placeholder="https://portal.chilmarieshop.top">
                         </div>
                         
                          <button type="submit" class="btn btn-primary">Save Settings</button>
@@ -1816,6 +1875,26 @@
                         </label>
                     </div>
 
+                    <!-- BADGE & OLD PRICE -->
+                    <div class="form-field" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:1rem;">
+                        <h4 style="font-weight:600;margin-bottom:0.75rem;">🏷️ Product Badge & Offer Price</h4>
+                        <div class="form-field" style="margin-bottom:0.75rem;">
+                            <label for="product-badge">Badge (blinking animation দিয়ে দেখাবে)</label>
+                            <select id="product-badge" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color);color:var(--text-color);width:100%;">
+                                <option value="">-- কোনো Badge নেই --</option>
+                                <option value="SALE">🔴 SALE</option>
+                                <option value="OFFER">🟠 OFFER</option>
+                                <option value="HOT DEAL">🔥 HOT DEAL</option>
+                                <option value="NEW">🟢 NEW</option>
+                                <option value="POPULAR">🔵 POPULAR</option>
+                            </select>
+                        </div>
+                        <div class="form-field" style="margin-bottom:0;">
+                            <label for="product-old-price">পুরনো Price / Original Price (৳) — কেটে দেওয়া price দেখাবে</label>
+                            <input type="number" id="product-old-price" step="0.01" placeholder="যেমন: 650 (optional)">
+                        </div>
+                    </div>
+
                     <!-- VARIATION SECTION START -->
                     <div class="form-field">
                         <label style="display: flex; align-items: center; cursor: pointer;">
@@ -1947,11 +2026,27 @@
         
                     <!-- Product Groups Section -->
                     <div class="campaign-section">
-                        <h3>Product Groups (Collections)</h3>
+                        <h3>📦 Product Groups (Collections)</h3>
                         <div id="product-groups-container">
                             <!-- JS dynamically adds product groups here -->
                         </div>
                         <button type="button" class="btn btn-secondary" id="add-product-group-btn" style="margin-top: 10px;">+ Add Product Group</button>
+                    </div>
+
+                    <!-- ✅ NEW: Direct Product Search & Add (Flash Sale Style) -->
+                    <div class="campaign-section" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:1rem;">
+                        <h3 style="margin-bottom:0.75rem;">🔍 সরাসরি Product যোগ করুন (Flash Sale Style)</h3>
+                        <p style="font-size:0.8rem;color:#6b7280;margin-bottom:0.75rem;">এখানে search করে যেকোনো product এই campaign এ directly add/remove করুন।</p>
+                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                            <input type="text" id="campaign-product-search-input" placeholder="Product নাম লিখুন..." style="flex:1;min-width:180px;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color);color:var(--text-color);">
+                            <button type="button" class="btn btn-primary" onclick="searchProductsForCampaign()">🔍 Search</button>
+                        </div>
+                        <div id="campaign-product-search-results" style="margin-top:0.75rem;"></div>
+                        <div style="margin-top:1rem;">
+                            <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:0.5rem;">যোগ করা Products: <span id="campaign-direct-product-count" style="color:#6b7280;font-weight:400;">(0টি)</span></h4>
+                            <div id="campaign-direct-products-list" style="display:grid;gap:8px;max-height:250px;overflow-y:auto;"></div>
+                            <input type="hidden" id="campaign-direct-product-ids" value="">
+                        </div>
                     </div>
 
                     <!-- Categories Section -->
@@ -2560,6 +2655,7 @@ const downloadInvoice = async () => {
                 case '#campaigns': listenToCampaigns(); break; 
 				case '#analytics': initAnalyticsData(); break;
 				case '#return-requests': listenToReturns(); break;
+                case '#flash-sale-mgmt': loadFlashSaleMgmt(); break;
             }
         }
 
@@ -3153,6 +3249,8 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
         basePrice: parseFloat(document.getElementById('product-price').value),
         isDigital: document.getElementById('product-is-digital')?.checked || false,
         needsUID: document.getElementById('product-needs-uid')?.checked || false,
+        badge: document.getElementById('product-badge')?.value || '',
+        oldPrice: parseFloat(document.getElementById('product-old-price')?.value) || null,
         updatedAt: new Date().toISOString()
     };
 
@@ -3246,6 +3344,12 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
                     if (digitalCheckbox) digitalCheckbox.checked = p.isDigital || false;
                     const uidCheckbox = document.getElementById('product-needs-uid');
                     if (uidCheckbox) uidCheckbox.checked = p.needsUID || false;
+
+                    // Load badge and oldPrice
+                    const badgeEl = document.getElementById('product-badge');
+                    if (badgeEl) badgeEl.value = p.badge || '';
+                    const oldPriceEl = document.getElementById('product-old-price');
+                    if (oldPriceEl) oldPriceEl.value = p.oldPrice || '';
                     
                     if (p.hasVariations) {
                         (p.variations || []).forEach(vt => {
@@ -3440,6 +3544,14 @@ const addProductGroupUI = (group = { title: '', productIds: [] }) => {
             document.getElementById('campaign-modal-title').textContent = 'Create Campaign Page';
             document.getElementById('product-groups-container').innerHTML = '';
             
+            // Reset direct products
+            campaignDirectProductIds = [];
+            const searchRes = document.getElementById('campaign-product-search-results');
+            if (searchRes) searchRes.innerHTML = '';
+            const searchIn = document.getElementById('campaign-product-search-input');
+            if (searchIn) searchIn.value = '';
+            renderCampaignDirectProducts([]);
+
             await cacheProductsAndCategories();
 
             const categorySelect = document.getElementById('campaign-categories');
@@ -3471,6 +3583,10 @@ const addProductGroupUI = (group = { title: '', productIds: [] }) => {
     // ... (rest of the save logic remains same) ...
     const categoryIds = Array.from(document.getElementById('campaign-categories').selectedOptions).map(opt => opt.value);
 
+    // Direct product IDs (Flash Sale style)
+    const directProductIdsStr = document.getElementById('campaign-direct-product-ids')?.value || '';
+    const directProductIds = directProductIdsStr.split(',').filter(id => id.trim() !== '');
+
     const campaignData = {
         title: document.getElementById('campaign-title').value,
         coverImage: document.getElementById('campaign-cover-image').value,
@@ -3478,6 +3594,7 @@ const addProductGroupUI = (group = { title: '', productIds: [] }) => {
         status: document.getElementById('campaign-status').value,
         productGroups,
         categoryIds,
+        directProductIds,
         updatedAt: serverTimestamp()
     };
     
@@ -3546,6 +3663,106 @@ window.selectProductForPicker = (id, name, image) => {
     }
     document.getElementById('product-picker-modal').style.display = 'none';
 };
+
+// ══════════════════════════════════════════════
+// CAMPAIGN — DIRECT PRODUCT ADD/REMOVE (Flash Sale Style)
+// ══════════════════════════════════════════════
+
+// Campaign direct product list (in-memory while modal open)
+let campaignDirectProductIds = [];
+
+const renderCampaignDirectProducts = async (ids) => {
+    campaignDirectProductIds = [...ids];
+    const listEl = document.getElementById('campaign-direct-products-list');
+    const countEl = document.getElementById('campaign-direct-product-count');
+    const hiddenEl = document.getElementById('campaign-direct-product-ids');
+    if (countEl) countEl.textContent = `(${ids.length}টি)`;
+    if (hiddenEl) hiddenEl.value = ids.join(',');
+    if (!listEl) return;
+    if (!ids.length) {
+        listEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">কোনো product যোগ করা হয়নি।</p>';
+        return;
+    }
+    listEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;padding:0.3rem;">লোড হচ্ছে...</p>';
+    try {
+        const snaps = await Promise.all(ids.map(id => getDoc(doc(db, 'products', id))));
+        const products = snaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+        listEl.innerHTML = products.map(p => `
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border-color);border-radius:6px;background:var(--content-bg);">
+                <img src="${p.imageUrl || p.imageurl || ''}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;background:#eee;" onerror="this.src=''">
+                <div style="flex:1;min-width:0;">
+                    <p style="font-size:0.85rem;font-weight:600;color:var(--text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name || 'Unknown'}</p>
+                    <p style="font-size:0.75rem;color:var(--text-muted);">৳${p.price || p.basePrice || 0}</p>
+                </div>
+                <button type="button" class="btn" style="background:#ef4444;color:white;font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="removeCampaignDirectProduct('${p.id}')">🗑 Remove</button>
+            </div>`).join('');
+    } catch(e) { listEl.innerHTML = '<p style="color:red;font-size:0.85rem;">লোড করা যায়নি।</p>'; }
+};
+
+window.searchProductsForCampaign = async () => {
+    const q = document.getElementById('campaign-product-search-input')?.value.trim();
+    const resultsEl = document.getElementById('campaign-product-search-results');
+    if (!q || q.length < 2) { showToast('কমপক্ষে ২ অক্ষর লিখুন!', 'error'); return; }
+    resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">খোঁজা হচ্ছে...</p>';
+    try {
+        const { data, error } = await supabase.from('products').select('id, name, imageurl, price').ilike('name', `%${q}%`).limit(10);
+        if (error || !data || !data.length) {
+            resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো product পাওয়া যায়নি।</p>';
+            return;
+        }
+        resultsEl.innerHTML = data.map(p => `
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:6px;background:var(--content-bg);">
+                <img src="${p.imageurl || ''}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;background:#eee;" onerror="this.src=''">
+                <div style="flex:1;min-width:0;">
+                    <p style="font-size:0.85rem;font-weight:600;color:var(--text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</p>
+                    <p style="font-size:0.75rem;color:var(--text-muted);">৳${p.price}</p>
+                </div>
+                <button type="button" class="btn btn-primary" style="font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="addCampaignDirectProduct('${p.id}', '${(p.name||'').replace(/'/g,"\\'")}', '${p.imageurl||''}', ${p.price||0})">+ Add</button>
+            </div>`).join('');
+    } catch(e) { resultsEl.innerHTML = '<p style="color:red;font-size:0.85rem;">Error: ' + e.message + '</p>'; }
+};
+
+window.addCampaignDirectProduct = (id, name, image, price) => {
+    if (campaignDirectProductIds.includes(id)) { showToast('এই product আগেই যোগ আছে!', 'error'); return; }
+    campaignDirectProductIds.push(id);
+    // Re-render with manually built product (no Firebase fetch needed)
+    const listEl = document.getElementById('campaign-direct-products-list');
+    const countEl = document.getElementById('campaign-direct-product-count');
+    const hiddenEl = document.getElementById('campaign-direct-product-ids');
+    if (countEl) countEl.textContent = `(${campaignDirectProductIds.length}টি)`;
+    if (hiddenEl) hiddenEl.value = campaignDirectProductIds.join(',');
+    // Append new item
+    const div = document.createElement('div');
+    div.id = `cdp-${id}`;
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border-color);border-radius:6px;background:var(--content-bg);';
+    div.innerHTML = `
+        <img src="${image}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;background:#eee;" onerror="this.src=''">
+        <div style="flex:1;min-width:0;">
+            <p style="font-size:0.85rem;font-weight:600;color:var(--text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</p>
+            <p style="font-size:0.75rem;color:var(--text-muted);">৳${price}</p>
+        </div>
+        <button type="button" class="btn" style="background:#ef4444;color:white;font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="removeCampaignDirectProduct('${id}')">🗑 Remove</button>`;
+    // Remove placeholder if exists
+    const placeholder = listEl.querySelector('p');
+    if (placeholder) placeholder.remove();
+    listEl.appendChild(div);
+    showToast(`"${name}" যোগ হয়েছে!`);
+};
+
+window.removeCampaignDirectProduct = (id) => {
+    campaignDirectProductIds = campaignDirectProductIds.filter(i => i !== id);
+    const el = document.getElementById(`cdp-${id}`);
+    if (el) el.remove();
+    const countEl = document.getElementById('campaign-direct-product-count');
+    const hiddenEl = document.getElementById('campaign-direct-product-ids');
+    if (countEl) countEl.textContent = `(${campaignDirectProductIds.length}টি)`;
+    if (hiddenEl) hiddenEl.value = campaignDirectProductIds.join(',');
+    showToast('Product সরানো হয়েছে!');
+};
+
+// ══════════════════════════════════════════════
+// END CAMPAIGN DIRECT PRODUCT
+// ══════════════════════════════════════════════
 
         // --- COUPON MANAGEMENT ---
         function listenToCoupons() {
@@ -3974,6 +4191,13 @@ document.getElementById('campaigns-table-body').addEventListener('click', async 
                     page.productGroups.forEach(group => addProductGroupUI(group));
                 }
 
+                // Direct products (Flash Sale style) load
+                const searchRes = document.getElementById('campaign-product-search-results');
+                if (searchRes) searchRes.innerHTML = '';
+                const searchIn = document.getElementById('campaign-product-search-input');
+                if (searchIn) searchIn.value = '';
+                renderCampaignDirectProducts(page.directProductIds || []);
+
                 // ক্যাটাগরি সিলেক্ট করা
                 const catSelect = document.getElementById('campaign-categories');
                 Array.from(catSelect.options).forEach(opt => {
@@ -4208,6 +4432,10 @@ document.getElementById('campaigns-table-body').addEventListener('click', async 
                 if (bkashEl) bkashEl.value = paymentNums.bkash || '';
                 if (nagadEl) nagadEl.value = paymentNums.nagad || '';
 
+                // Load portal URL
+                const portalEl = document.getElementById('portal-url');
+                if (portalEl) portalEl.value = settings.portalUrl || data.portalUrl || '';
+
                 document.getElementById('store-name-sidebar').textContent = settings.storeName || 'Admin Panel';
                 document.getElementById('store-logo-sidebar').src = settings.storeLogoUrl || 'https://via.placeholder.com/40';
             }
@@ -4222,6 +4450,7 @@ document.getElementById('campaigns-table-body').addEventListener('click', async 
                 storeContactEmail: document.getElementById('store-contact-email').value,
                 storeContactPhone: document.getElementById('store-contact-phone').value,
                 storeAddress: document.getElementById('store-address').value,
+                portalUrl: (document.getElementById('portal-url')?.value || '').trim(),
             };
             const deliveryData = {
                 inside: parseFloat(document.getElementById('delivery-cost-inside').value) || 0,
@@ -5317,6 +5546,129 @@ window.deleteReviewItem = async (docPath) => {
             navigateTo(hash);
             fetchSettings();
         }
+
+        // ══════════════════════════════════════════════
+        // FLASH SALE MANAGEMENT
+        // ══════════════════════════════════════════════
+
+        // Load flash sale settings when page opens
+        async function loadFlashSaleMgmt() {
+            try {
+                const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
+                if (fsDoc.exists()) {
+                    const d = fsDoc.data();
+                    const activeEl = document.getElementById(d.active ? 'fs-active-yes' : 'fs-active-no');
+                    if (activeEl) activeEl.checked = true;
+                    if (d.endTime) {
+                        const dt = d.endTime.toDate();
+                        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                        const el = document.getElementById('fs-end-datetime');
+                        if (el) el.value = local;
+                    }
+                    renderFSCurrentProducts(d.productIds || []);
+                } else {
+                    renderFSCurrentProducts([]);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        window.saveFlashSaleSettings = async () => {
+            const active = document.querySelector('input[name="fs-status"]:checked')?.value === 'true';
+            const dtVal = document.getElementById('fs-end-datetime')?.value;
+            if (!dtVal) { showToast('End date/time দিন!', 'error'); return; }
+            const endTime = new Date(dtVal);
+
+            try {
+                showLoader();
+                await setDoc(doc(db, 'settings', 'flashSale'), { active, endTime }, { merge: true });
+                const el = document.getElementById('fs-settings-status');
+                if (el) { el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2000); }
+                showToast('Flash Sale settings saved!');
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            finally { hideLoader(); }
+        };
+
+        window.searchProductsForFS = async () => {
+            const q = document.getElementById('fs-product-search-input')?.value.trim();
+            const resultsEl = document.getElementById('fs-search-results');
+            if (!q || q.length < 2) { showToast('কমপক্ষে ২ অক্ষর লিখুন!', 'error'); return; }
+            resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">খোঁজা হচ্ছে...</p>';
+
+            try {
+                const { data } = await supabase.from('products').select('id, name, imageurl, price').ilike('name', `%${q}%`).limit(10);
+                if (!data || data.length === 0) {
+                    resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো product পাওয়া যায়নি।</p>';
+                    return;
+                }
+                resultsEl.innerHTML = data.map(p => `
+                    <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:8px;background:var(--content-bg);">
+                        <img src="${p.imageurl || ''}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;background:#eee;">
+                        <div style="flex:1;min-width:0;">
+                            <p style="font-size:0.85rem;font-weight:600;color:var(--text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</p>
+                            <p style="font-size:0.75rem;color:var(--text-muted);">৳${p.price}</p>
+                        </div>
+                        <button class="btn btn-primary" style="font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="addProductToFS('${p.id}', '${(p.name || '').replace(/'/g, "\\'")}')">+ Add</button>
+                    </div>`).join('');
+            } catch(e) { resultsEl.innerHTML = '<p style="color:red;font-size:0.85rem;">Error: ' + e.message + '</p>'; }
+        };
+
+        window.addProductToFS = async (productId, productName) => {
+            try {
+                showLoader();
+                const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
+                let productIds = fsDoc.exists() ? (fsDoc.data().productIds || []) : [];
+                if (productIds.includes(productId)) { showToast('এই product আগেই আছে!', 'error'); return; }
+                productIds.push(productId);
+                await setDoc(doc(db, 'settings', 'flashSale'), { productIds }, { merge: true });
+                showToast(`"${productName}" Flash Sale এ যোগ হয়েছে!`);
+                loadFlashSaleMgmt();
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            finally { hideLoader(); }
+        };
+
+        window.removeProductFromFS = async (productId) => {
+            if (!confirm('এই product Flash Sale থেকে সরাবেন?')) return;
+            try {
+                showLoader();
+                const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
+                let productIds = fsDoc.exists() ? (fsDoc.data().productIds || []) : [];
+                productIds = productIds.filter(id => id !== productId);
+                await setDoc(doc(db, 'settings', 'flashSale'), { productIds }, { merge: true });
+                showToast('Product সরানো হয়েছে!');
+                loadFlashSaleMgmt();
+            } catch(e) { showToast('Error: ' + e.message, 'error'); }
+            finally { hideLoader(); }
+        };
+
+        const renderFSCurrentProducts = async (productIds) => {
+            const container = document.getElementById('fs-current-products');
+            const countEl = document.getElementById('fs-product-count');
+            if (countEl) countEl.textContent = `(${productIds.length}টি)`;
+            if (!productIds.length) {
+                container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1.5rem;">Flash Sale এ কোনো product নেই।</p>';
+                return;
+            }
+            container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">লোড হচ্ছে...</p>';
+            try {
+                const snaps = await Promise.all(productIds.map(id => getDoc(doc(db, 'products', id))));
+                const products = snaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+                container.innerHTML = products.map(p => `
+                    <div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border-color);border-radius:8px;background:var(--content-bg);">
+                        <img src="${p.imageUrl || p.imageurl || ''}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;background:#eee;">
+                        <div style="flex:1;min-width:0;">
+                            <p style="font-size:0.9rem;font-weight:600;color:var(--text-color);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name || 'Unknown'}</p>
+                            <p style="font-size:0.8rem;color:var(--text-muted);">৳${p.price || p.basePrice || 0} · ID: ${p.id.slice(0,8)}...</p>
+                        </div>
+                        <button class="btn" style="background:var(--danger-color);color:white;font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="removeProductFromFS('${p.id}')">🗑 Remove</button>
+                    </div>`).join('');
+            } catch(e) { container.innerHTML = '<p style="color:red;">লোড করা যায়নি।</p>'; }
+        };
+
+        // Also load badge field in product form — handled via existing product form with badge field
+        // Badge is saved as product.badge in Firebase via product add/edit form
+        // ══════════════════════════════════════════════
+        // END FLASH SALE MANAGEMENT
+        // ══════════════════════════════════════════════
 
     </script>
 </body>
