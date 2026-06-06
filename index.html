@@ -4119,14 +4119,34 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
     const renderSupportLinks = (links = {}) => { const container = document.getElementById('support-links-container'); const linkData = [ { key: 'whatsapp', name: 'WhatsApp', icon: 'fab fa-whatsapp', color: '#25D366', text: 'Chat with us directly' }, { key: 'facebook', name: 'Facebook', icon: 'fab fa-facebook-messenger', color: '#00B2FF', text: 'Message our page' }, { key: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', color: '#E4405F', text: 'Follow us for updates' }, { key: 'telegram', name: 'Telegram', icon: 'fab fa-telegram-plane', color: '#229ED9', text: 'Join our community' }, { key: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', color: '#FF0000', text: 'Watch our videos' }, { key: 'mediafire', name: 'Download Our App', icon: 'fas fa-mobile-alt', color: '#1175E8', text: 'Get the full experience' }, ]; let html = linkData.map(link => (links[link.key] ? `<a href="${escapeHtml(links[link.key])}" target="_blank" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100"><i class="${link.icon} text-3xl" style="color: ${link.color};"></i><div><p class="font-semibold text-gray-800">${link.name}</p><p class="text-xs text-gray-500">${link.text}</p></div></a>` : '')).join(''); container.innerHTML = html || '<p class="text-center text-gray-500">Support links will be available soon.</p>'; };
     const renderAboutUs = (about = {}) => { const container = document.getElementById('about-us-content'); if (about && about.content) { const formattedContent = about.content.split('\n').map(p => `<p>${escapeHtml(p)}</p>`).join(''); container.innerHTML = `<h2 class="text-2xl font-bold mb-4">${escapeHtml(about.title || 'About Us')}</h2><div class="prose max-w-none text-gray-600 space-y-4">${formattedContent}</div>`; } else { container.innerHTML = '<p class="text-center text-gray-500 py-16">Information about us is coming soon!</p>'; } };
     
-    const startCountdown = () => { 
+    const startCountdown = async () => { 
         const timerEl = document.getElementById('countdown-timer'); 
         if(!timerEl) return; 
-        
-        let targetTime = parseInt(localStorage.getItem('flashSaleEndTime'));
+
+        // Firebase থেকে real endTime আনো
+        let targetTime = 0;
+        try {
+            const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
+            if (fsDoc.exists()) {
+                const d = fsDoc.data();
+                const isActive = d.active === true || d.active === 'true';
+                if (isActive && d.endTime) {
+                    targetTime = d.endTime.toMillis();
+                    localStorage.setItem('flashSaleEndTime', targetTime);
+                }
+            }
+        } catch(e) {}
+
+        // Firebase থেকে না পেলে localStorage fallback
+        if (!targetTime) {
+            targetTime = parseInt(localStorage.getItem('flashSaleEndTime')) || 0;
+        }
+
+        // যদি expired বা নেই তাহলে timer লুকাও
+        const hotDealsSection = document.querySelector('.hot-deals-section, #hot-deals-section');
         if (!targetTime || targetTime < Date.now()) {
-            targetTime = Date.now() + 2 * 60 * 60 * 1000;
-            localStorage.setItem('flashSaleEndTime', targetTime);
+            timerEl.innerHTML = '<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">--</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">--</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">--</span>';
+            return;
         }
 
         const updateTimer = () => {
@@ -4134,9 +4154,8 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
             let diff = Math.floor((targetTime - now) / 1000);
 
             if (diff <= 0) {
-                targetTime = Date.now() + 2 * 60 * 60 * 1000;
-                localStorage.setItem('flashSaleEndTime', targetTime);
-                diff = 2 * 60 * 60;
+                timerEl.innerHTML = '<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">00</span>';
+                return;
             }
 
             const h = String(Math.floor(diff / 3600)).padStart(2, '0');
@@ -4188,14 +4207,24 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
 
         try {
             const fsDoc = await getDoc(doc(db, 'settings', 'flashSale'));
-            if (!fsDoc.exists() || !fsDoc.data().active) {
+            if (!fsDoc.exists()) {
                 loading.innerHTML = '';
                 empty.classList.remove('hidden');
                 return;
             }
             const fsData = fsDoc.data();
-            const endTime = fsData.endTime ? fsData.endTime.toMillis() : Date.now() + 3600000;
-            startFlashSaleCountdown(endTime);
+            // active হতে পারে boolean true বা string "true"
+            const isActive = fsData.active === true || fsData.active === 'true';
+            // endTime শেষ হয়ে গেলেও inactive ধরব
+            const endTime = fsData.endTime ? fsData.endTime.toMillis() : 0;
+            const isExpired = endTime > 0 && endTime < Date.now();
+
+            if (!isActive || isExpired) {
+                loading.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            startFlashSaleCountdown(endTime || Date.now() + 3600000);
 
             const productIds = fsData.productIds || [];
             if (productIds.length === 0) {
@@ -4204,7 +4233,7 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
                 return;
             }
 
-            // Also update home countdown timer endTime
+            // Home countdown timer ও Firebase endTime দিয়ে update করো
             localStorage.setItem('flashSaleEndTime', endTime);
 
             const productPromises = productIds.slice(0, 50).map(pid => getDoc(doc(db, 'products', pid)));
