@@ -4153,14 +4153,20 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
 
             if (!isActive || isExpired || !targetTime) { showZero(); return; }
 
-            // Timer চালু
+            // Timer চালু — DD:HH:MM:SS format
+            const box = (val, label='') => `<span class="bg-gray-800 text-white font-bold px-1.5 h-6 flex items-center justify-center rounded text-xs">${val}${label}</span>`;
             const updateTimer = () => {
                 const diff = Math.floor((targetTime - Date.now()) / 1000);
                 if (diff <= 0) { showZero(); return; }
-                const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const days = Math.floor(diff / 86400);
+                const h = String(Math.floor((diff % 86400) / 3600)).padStart(2, '0');
                 const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
                 const s = String(diff % 60).padStart(2, '0');
-                timerEl.innerHTML = `<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${h}</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${m}</span>:<span class="bg-gray-800 text-white font-bold w-6 h-6 flex items-center justify-center rounded">${s}</span>`;
+                if (days > 0) {
+                    timerEl.innerHTML = `${box(days+'d')}${box(h)}:${box(m)}:${box(s)}`;
+                } else {
+                    timerEl.innerHTML = `${box(h)}:${box(m)}:${box(s)}`;
+                }
             };
             updateTimer();
             homeCountdownInterval = setInterval(updateTimer, 1000);
@@ -4176,19 +4182,25 @@ document.getElementById('product-schema').textContent = JSON.stringify(schemaDat
         if (!timerEl) return;
         if (fsCountdownInterval) clearInterval(fsCountdownInterval);
 
+        const fsBox = (val) => `<span class="bg-white text-red-600 font-bold px-1.5 h-7 flex items-center justify-center rounded text-xs">${val}</span>`;
         const update = () => {
             const now = Date.now();
             let diff = Math.floor((endTime - now) / 1000);
             if (diff <= 0) {
-                timerEl.innerHTML = `<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">00</span>`;
+                timerEl.innerHTML = `${fsBox('00')}:${fsBox('00')}:${fsBox('00')}`;
                 if (statusEl) statusEl.textContent = 'ENDED';
                 clearInterval(fsCountdownInterval);
                 return;
             }
-            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const days = Math.floor(diff / 86400);
+            const h = String(Math.floor((diff % 86400) / 3600)).padStart(2, '0');
             const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
             const s = String(diff % 60).padStart(2, '0');
-            timerEl.innerHTML = `<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">${h}</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">${m}</span>:<span class="bg-white text-red-600 font-bold w-7 h-7 flex items-center justify-center rounded text-xs">${s}</span>`;
+            if (days > 0) {
+                timerEl.innerHTML = `${fsBox(days+'d')}${fsBox(h)}:${fsBox(m)}:${fsBox(s)}`;
+            } else {
+                timerEl.innerHTML = `${fsBox(h)}:${fsBox(m)}:${fsBox(s)}`;
+            }
             if (statusEl) statusEl.textContent = 'LIVE';
         };
         update();
