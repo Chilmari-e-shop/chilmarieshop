@@ -1,1 +1,4 @@
-x]]xhams
+User-agent: *
+Allow: /
+
+Sitemap: https://chilmarieshop.top/sitemap.xml
