@@ -1,0 +1,599 @@
+:root {
+    /* Chilmari E-Shop - Clean Premium Theme (Red Brand) */
+    --primary-color: #dc2626;
+    --primary-dark: #b91c1c;
+    --primary-light: #ef4444;
+    
+    /* Text Colors */
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --price-color: #0f172a;
+    
+    /* Backgrounds */
+    --bg-offwhite: #f8fafc;
+    --card-bg: #ffffff;
+    --header-bg: rgba(255, 255, 255, 0.85);
+    
+    /* Status Colors */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+}
+
+/* Primary Button Classes */
+.bg-primary { background-color: var(--primary-color); }
+.bg-primary-dark { background-color: var(--primary-dark); }
+.hover\:bg-primary-dark:hover { background-color: var(--primary-dark); }
+.text-primary-color { color: var(--primary-color); }
+.border-primary { border-color: var(--primary-color); }
+.ring-primary:focus { --tw-ring-color: var(--primary-color); }
+
+/* Simple Buttons */
+.btn-add-to-cart, .btn-buy-now { 
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+.btn-add-to-cart:hover, .btn-buy-now:hover { 
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+}
+
+/* Cart Badge */
+.cart-badge { 
+    background-color: var(--primary-color); 
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+/* Product Text */
+.product-name { 
+    color: var(--text-primary); 
+    font-weight: 500;
+}
+
+/* Price Styling */
+.price-text { 
+    color: var(--price-color); 
+    font-weight: 700; 
+}
+.offer-text { 
+    color: var(--primary-color); 
+    font-weight: 600; 
+}
+.discount-badge { 
+    background-color: var(--primary-color); 
+    color: white; 
+}
+
+/* Header & Navigation */
+header { 
+    background: var(--header-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: none;
+}
+
+.fixed-bottom-nav {
+    background-color: var(--card-bg);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+}
+
+body { 
+    background-color: var(--bg-offwhite); 
+    background-image:
+        radial-gradient(at 40% 20%, hsla(263, 100%, 74%, 0.08) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.06) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-primary); 
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+}
+.section { display: none; }
+.active-section { display: block; }
+.active-nav { color: var(--primary-color); font-weight: 600; }
+
+/* Simple Product Card */
+.product-card { 
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+.product-card:hover { 
+    box-shadow: 0 16px 40px rgba(220, 38, 38, 0.12);
+    transform: translateY(-6px);
+    border-color: rgba(220, 38, 38, 0.25);
+}
+
+.quantity-btn { 
+    width: 32px; 
+    height: 32px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border: 1px solid #e5e7eb; 
+    background-color: white;
+    border-radius: 4px;
+}
+.quantity-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.loading-spinner { 
+    border: 3px solid rgba(0,0,0,0.1); 
+    border-radius: 50%; 
+    border-top: 3px solid var(--primary-color); 
+    width: 24px; 
+    height: 24px; 
+    animation: spin 1s linear infinite; 
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.tab-button { 
+    padding: 12px 16px; 
+    border-bottom: 2px solid transparent; 
+    font-size: 0.9rem; 
+    color: var(--text-secondary); 
+    white-space: nowrap;
+}
+.tab-button.active { 
+    border-bottom-color: var(--primary-color); 
+    color: var(--primary-color); 
+    font-weight: 600; 
+}
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 0; min-width: 60px; }
+.nav-icon { font-size: 1.25rem; margin-bottom: 2px; }
+.nav-label { font-size: 0.7rem; }
+.fixed-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.08);z-index: 100; }
+@keyframes orangeBlink { 0%,100%{background:#f97316;box-shadow:0 0 0 0 rgba(249,115,22,0.7);} 50%{background:#ea580c;box-shadow:0 0 0 6px rgba(249,115,22,0);} }
+.notif-blink { animation: orangeBlink 1s ease-in-out infinite !important; }
+@keyframes notifPulse { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1);} }
+.notif-bell-pulse { animation: notifPulse 0.6s ease-in-out 3; }
+.content-area { padding-bottom: 70px; }
+
+/* Product Badge Blinking */
+@keyframes badgeBlink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.7;transform:scale(1.08);} }
+.product-badge { animation: badgeBlink 1.2s ease-in-out infinite; z-index: 5; }
+
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; align-items: center; justify-content: center; }
+.modal.active { display: flex; }
+.modal-content { background-color: white; border-radius: 8px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+
+.sticky-bottom-bar { position: fixed; bottom: 58px; left: 0; right: 0; background: white; padding: 10px 16px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 90; }
+
+/* Simple Input Focus */
+input:focus, textarea:focus { 
+    border-color: var(--primary-color) !important; 
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1); 
+    outline: none; 
+}
+
+.products-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+.header-search-bar { background-color: #f3f4f6; border-radius: 20px; }
+.header-search-bar input { background: transparent; border: none; outline: none; }
+
+/* Simple Stepper */
+.stepper { display: flex; align-items: center; justify-content: center; padding: 16px 0; }
+.step { display: flex; align-items: center; color: #d1d5db; font-size: 12px; }
+.step.active { color: var(--primary-color); font-weight: 600; }
+.step-number { 
+    width: 22px; 
+    height: 22px; 
+    border-radius: 50%; 
+    background-color: #e5e7eb; 
+    color: #9ca3af; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    margin-right: 6px; 
+    font-size: 11px;
+    font-weight: 600;
+}
+.step.active .step-number { 
+    background-color: var(--primary-color); 
+    color: white;
+}
+.step-line { height: 2px; width: 40px; background-color: #e5e7eb; margin: 0 8px; }
+.step.active .step-line { background-color: var(--primary-color); }
+
+ /* Chilmari E-Shop Brand Slider */
+#home-slider-container {
+
+border-radius: 12px !important; /* কোণাগুলো সুন্দরভাবে গোল */
+overflow: hidden;
+background-color: #eee;
+box-shadow: none !important;
+}
+
+#home-slider-container .swiper-wrapper {
+height: 100% !important;
+}
+
+#home-slider-container .swiper-slide {
+width: 100%;
+height: 100%;
+}
+
+#home-slider-container .swiper-slide img {
+width: 100%;
+height: 100%;
+
+/* 'fill' - ইমেজটিকে টেনে বক্সের সমান করবে, কিছুই কাটবে না */
+object-fit: fill !important;  
+
+display: block;
+}
+
+/* পেজিনেশন (Dots) */
+#home-slider-container .swiper-pagination {
+bottom: 8px !important;
+}
+#home-slider-container .swiper-pagination-bullet {
+width: 6px;
+height: 6px;
+background: rgba(255, 255, 255, 0.7);
+opacity: 1;
+}
+#home-slider-container .swiper-pagination-bullet-active {
+background: #fff !important;
+width: 12px;
+border-radius: 4px;
+}
+
+/* Pagination Dots */
+#home-slider-container .swiper-pagination-bullet {
+width: 6px;
+height: 6px;
+background: rgba(255, 255, 255, 0.8);
+opacity: 0.6;
+}
+#home-slider-container .swiper-pagination-bullet-active {
+background: #dc2626 !important;
+width: 16px;
+border-radius: 4px;
+opacity: 1;
+}
+
+/* Pagination Dots (Optional Style) */
+#home-slider-container .swiper-pagination-bullet {
+width: 6px;
+height: 6px;
+background: rgba(255, 255, 255, 0.8);
+opacity: 0.6;
+}
+#home-slider-container .swiper-pagination-bullet-active {
+background: #dc2626 !important;
+width: 16px;
+border-radius: 4px;
+opacity: 1;
+}
+
+/* --- REVIEW SYSTEM CSS --- */
+.star-rating-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; }
+.star-rating-input input { display: none; }
+.star-rating-input label { font-size: 2rem; color: #e0e0e0; cursor: pointer; transition: color 0.2s; }
+.star-rating-input input:checked ~ label,
+.star-rating-input label:hover,
+.star-rating-input label:hover ~ label { color: #ffc107; }
+
+.review-image-box { width: 70px; height: 70px; border: 1px dashed #bdbdbd; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #fafafa; }
+.review-img-preview { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; }
+.review-img-wrapper { position: relative; width: 70px; height: 70px; }
+.review-img-remove { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* Review Gallery in Product View */
+.review-gallery { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; }
+.review-gallery img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #f0f0f0; }
+
+.header-logo { width: 40px; height: 40px; object-fit: contain; }
+
+.address-card { border: 1px solid #e0e0e0; padding: 10px; border-radius: 6px; position: relative; }
+.address-card.active-address { border-color: var(--primary-color); background-color: #fef2f2; }
+
+.order-tracker { display: flex; align-items: flex-start; padding: 1rem 0; }
+.tracker-step { flex: 1; text-align: center; position: relative; z-index: 1; }
+.tracker-icon { width: 30px; height: 30px; border-radius: 50%; background-color: #e0e0e0; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 14px; border: 2px solid #e0e0e0; transition: all 0.3s ease; }
+.tracker-label { font-size: 11px; color: #757575; }
+.tracker-step.completed .tracker-icon { background-color: var(--primary-color); border-color: var(--primary-color); }
+.tracker-step.completed .tracker-label { color: var(--primary-color); font-weight: 500; }
+.tracker-line { position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background-color: #e0e0e0; z-index: -1; }
+.tracker-step:first-child .tracker-line { left: 50%; }
+.tracker-step:last-child .tracker-line { width: 0; }
+.tracker-line-progress { position: absolute; top: 0; left: 0; width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.4s ease-out; }
+.tracker-step.completed .tracker-line .tracker-line-progress { width: 100%; }
+
+.skeleton-card { background-color: #fff; border-radius: 8px; overflow: hidden; }
+.skeleton-img { background-color: #e0e0e0; height: 160px; }
+.skeleton-text { background-color: #e0e0e0; height: 1rem; margin: 0.5rem; border-radius: 4px; }
+.skeleton-price { background-color: #e0e0e0; height: 1.25rem; width: 50%; margin: 0.5rem; border-radius: 4px; }
+.shimmer { position: relative; overflow: hidden; }
+.shimmer::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background-image: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.2) 20%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0)); animation: shimmer 1.5s infinite; }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+.product-card {
+    background-color: white;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.horizontal-scroll { display: flex; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.horizontal-scroll::-webkit-scrollbar { display: none; }
+.category-card-horizontal { flex: 0 0 auto; width: 80px; text-align: center; }
+
+.glow-on-hover { box-shadow: 0 0 5px rgba(220, 38, 38, 0.5), 0 0 10px rgba(220, 38, 38, 0.3); transition: box-shadow 0.3s ease-in-out; }
+.glow-on-hover:hover { box-shadow: 0 0 15px rgba(220, 38, 38, 0.8), 0 0 20px rgba(220, 38, 38, 0.5); }
+
+ /* Product Image Gallery Wrapper */
+#product-image-swiper {
+width: 100%;             /* পুরো স্ক্রিন নিবে */
+max-width: 100vw;        /* স্ক্রিনের বাইরে যাবে না */
+aspect-ratio: 1 / 1;     /* দারাজের মতো স্কয়ার শেপ */
+background-color: #fff;  /* ব্যাকগ্রাউন্ড সাদা */
+position: relative;      /* পজিশনিং ঠিক রাখতে */
+overflow: hidden;        /* স্লাইডার বাউণ্ডারির বাইরে কিছু যাবে না (Major Fix) */
+z-index: 1;              /* অন্য এলিমেন্টের উপর উঠে যাবে না */
+margin-bottom: 0px;
+}
+
+/* Swiper Wrapper & Slide Fix */
+#product-image-swiper .swiper-wrapper {
+height: 100%;            /* হাইট প্যারেন্ট সমান */
+}
+
+#product-image-swiper .swiper-slide {
+width: 100%;
+height: 100%;
+display: flex;           /* ইমেজ সেন্টারে আনার জন্য */
+align-items: center;
+justify_content: center;
+background-color: #fff;
+overflow: hidden;        /* ইমেজের বাড়তি অংশ লুকানোর জন্য */
+}
+
+/* Image Styling */
+#product-image-swiper .swiper-slide img {
+width: 100%;
+height: 100%;
+object-fit: contain;     /* ইমেজ কাটবে না, পুরোটা দেখাবে */
+display: block;
+}
+
+/* Pagination Dot Fix (Optional - Chilmari E-Shop Style) */
+#product-image-swiper .swiper-pagination {
+bottom: 10px !important;
+}
+#product-image-swiper .swiper-pagination-bullet {
+background: #ccc;
+opacity: 0.8;
+}
+#product-image-swiper .swiper-pagination-bullet-active {
+background: #dc2626 !important;
+width: 18px;
+border-radius: 4px;
+}
+.swiper-pagination-bullet-active { background-color: var(--primary-color) !important; }
+  /* Chilmari E-Shop Style Full Screen Zoom */
+#image-zoom-modal { 
+background-color: #000000 !important; /* একদম কালো ব্যাকগ্রাউন্ড */
+z-index: 10000 !important; /* সবার উপরে থাকবে */
+}
+
+#image-zoom-modal .swiper-slide { 
+display: flex; 
+align-items: center; 
+justify-content: center;
+width: 100%;
+height: 100%;
+}
+
+/* ইমেজ যাতে পুরো স্ক্রিন জুড়ে থাকে */
+.swiper-zoom-container {
+width: 100%;
+height: 100%;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.swiper-zoom-container > img { 
+width: 100% !important;
+height: 100% !important;
+max-width: 100vw !important; 
+max-height: 100vh !important; 
+object-fit: contain !important; /* ছবি কাটবে না কিন্তু বড় দেখাবে */
+}
+
+/* ক্লোজ বাটনটি একটু সুন্দর করার জন্য */
+#image-zoom-modal .close-btn {
+top: 40px !important; /* স্ট্যাটাস বারের নিচে */
+right: 20px !important;
+background: rgba(255, 255, 255, 0.2) !important;
+width: 35px;
+height: 35px;
+border-radius: 50%;
+font-size: 24px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+}
+.display-stars .fa-star { color: #ffc107; }
+.display-stars .fa-star.empty { color: #e0e0e0; }
+
+/* ── NOTIFICATION TABS ── */
+.notif-tab-btn {
+    color: #9ca3af;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+.notif-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+#sort-filter-modal .option.selected { color: var(--primary-color); font-weight: bold; }
+#full-search-page-section { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 200; transform: translateY(100%); transition: transform 0.3s ease-in-out; }
+#full-search-page-section.active-section { transform: translateY(0); }
+
+.variation-option { transition: all 0.2s ease; }
+.variation-option.active { background-color: #fef2f2; color: var(--primary-color); border-color: var(--primary-color); font-weight: 600; }
+.variation-option:disabled { background-color: #f5f5f5; border-color: #e0e0e0; color: #bdbdbd; cursor: not-allowed; text-decoration: line-through; }
+
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+#pull-to-refresh-spinner {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    z-index: 45;
+    background-color: white;
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+}
+#pull-to-refresh-spinner.visible { opacity: 1; transform: translateX(-50%) scale(1); }
+
+/* --- CHILMARI-ESHOP VARIATION POPUP --- */
+#variation-popup-modal {
+    display: none; 
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1001;
+}
+#variation-popup-modal.active { display: block; }
+#variation-popup-backdrop {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+#variation-popup-modal.active #variation-popup-backdrop { opacity: 1; }
+#variation-popup-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background-color: white;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+}
+#variation-popup-modal.active #variation-popup-content { transform: translateY(0); }
+#popup-confirm-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+#popup-confirm-btn:disabled {
+    background-color: #bdbdbd !important;
+    cursor: not-allowed;
+}
+
+/* --- FIX: APP LOADER --- */
+#app-loader {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: white;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+#image-zoom-modal .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 30px;
+    z-index: 1002;
+    cursor: pointer;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── FACEBOOK COMMENT SYSTEM ── */
+.fb-comment-section { margin-top: 12px; border-top: 1px dashed #e5e7eb; padding-top: 10px; }
+.fb-comment-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
+.fb-avatar { width: 32px; height: 32px; border-radius: 50%; background: #dc2626; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; overflow: hidden; }
+.fb-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fb-bubble { background: #f3f4f6; border-radius: 14px; padding: 8px 12px; flex: 1; min-width: 0; }
+.fb-bubble.seller-bubble { background: #fff5f5; border: 1px solid #fecaca; }
+.fb-bubble-name { font-size: 11px; font-weight: 700; color: #1f2937; }
+.fb-bubble-name.seller-name { color: #dc2626; }
+.seller-badge { background: #dc2626; color: white; font-size: 9px; padding: 1px 6px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
+.fb-bubble-text { font-size: 12px; color: #374151; margin-top: 2px; line-height: 1.5; word-break: break-word; }
+.fb-meta { display: flex; gap: 12px; margin-top: 4px; align-items: center; }
+.fb-time { font-size: 10px; color: #9ca3af; }
+.fb-reply-btn { font-size: 10px; color: #dc2626; font-weight: 700; background: none; border: none; cursor: pointer; padding: 0; }
+.fb-nested { margin-left: 40px; margin-top: 6px; }
+.fb-input-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.fb-input { flex: 1; border: 1px solid #e5e7eb; border-radius: 20px; padding: 8px 14px; font-size: 12px; outline: none; font-family: inherit; background: #f9fafb; transition: border-color 0.2s; }
+.fb-input:focus { border-color: #dc2626; background: white; }
+.fb-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.fb-send-btn { width: 34px; height: 34px; border-radius: 50%; background: #dc2626; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+.fb-send-btn:hover { background: #b91c1c; }
+.fb-send-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+.fb-show-more { font-size: 11px; color: #dc2626; font-weight: 600; background: none; border: none; cursor: pointer; padding: 4px 0; display: block; margin-top: 4px; }
+.fb-comment-count { font-size: 11px; color: #6b7280; cursor: pointer; margin-bottom: 6px; }
+.fb-comment-count:hover { text-decoration: underline; }
+
+/* ── Extra animations from inline styles ── */
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+@keyframes bounce {
+0%, 80%, 100% { transform: scale(0); }
+40% { transform: scale(1); }
+}
+@keyframes offlineFloatCloud{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+@keyframes offlineBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes offlineQFloat{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-9px);opacity:1}}
+@keyframes offlineArc{0%,100%{opacity:.15}50%{opacity:.9}}
+@keyframes offlineSweat{0%,100%{transform:translateY(0);opacity:.8}50%{transform:translateY(4px);opacity:.4}}
+#offline-overlay.active{display:flex!important;}
+.offline-retry-loading .offline-spin{display:block!important;}
+.offline-retry-loading .offline-btn-txt{display:none!important;}
+@keyframes offlineSpin{to{transform:rotate(360deg)}}
