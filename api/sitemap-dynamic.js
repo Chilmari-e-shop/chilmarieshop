@@ -1,5 +1,7 @@
 export default async function handler(req, res) {
   const projectId = "chilmarie-shop";
+  const base = "https://chilmarieshop.top";
+
   try {
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/products?pageSize=1000`;
     const response = await fetch(url);
@@ -7,22 +9,24 @@ export default async function handler(req, res) {
     const products = data.documents || [];
 
     const today = new Date().toISOString().split("T")[0];
-    let xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
-    xml += `<url><loc>https://www.chilmarieshop.top/</loc><lastmod>${today}</lastmod><priority>1.0</priority></url>`;
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    xml += `  <url><loc>${base}/</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>\n`;
 
-    products.forEach(doc => {
-      const id = doc.name.split('/').pop();
-      xml += `<url><loc>https://www.chilmarieshop.top/product-view/${id}</loc><priority>0.9</priority></url>`;
-    });
+    for (const doc of products) {
+      const id = doc.name.split("/").pop();
+      if (!id) continue;
+      xml += `  <url><loc>${base}/product-view/${id}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n`;
+    }
 
     xml += `</urlset>`;
-    
-    // --- খরচ বাঁচানোর ম্যাজিক লাইন ---
-    // এটি ভেরসেলকে বলবে এই সitemap টি ২৪ ঘণ্টা সেভ করে রাখতে (Cache)
-    res.setHeader("Content-Type", "text/xml");
-    res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate"); 
-    return res.send(xml);
+
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate");
+    return res.status(200).send(xml);
   } catch (e) {
-    return res.status(500).send("Error");
+    console.error("sitemap error:", e);
+    res.statusCode = 500;
+    return res.end("Sitemap error");
   }
 }
