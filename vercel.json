@@ -2,12 +2,37 @@
   "rewrites": [
     {
       "source": "/__/auth/(.*)",
-      "destination": "https://chilmarieshop1.firebaseapp.com/__/auth/$1"
+      "destination": "https://chilmarie-shop.firebaseapp.com/__/auth/$1"
     },
-    { "source": "/admin", "destination": "/owner.html" },
-    { "source": "/rider", "destination": "/reder.html" },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap-dynamic" },
-    { "source": "/product-view/:id", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/admin",
+      "destination": "/owner.html"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap-dynamic"
+    },
+    {
+      "source": "/product-view/:id",
+      "destination": "/api/product-seo?id=:id"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/app.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=60, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/style.css",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=60, must-revalidate" }
+      ]
+    }
   ]
 }
