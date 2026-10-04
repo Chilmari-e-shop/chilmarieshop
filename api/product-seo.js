@@ -1,5 +1,5 @@
-// Bot-friendly product HTML for Google / AI crawlers
-// Humans still get the SPA (index.html)
+import { readFileSync } from "fs";
+import { join } from "path";
 
 export default async function handler(req, res) {
   const id = req.query.id;
@@ -9,31 +9,26 @@ export default async function handler(req, res) {
   }
 
   const userAgent = req.headers["user-agent"] || "";
-  const isBot = /googlebot|google-inspectiontool|bingbot|yandex|duckduck|baidu|slurp|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|chatgpt|claudebot|anthropic|perplexity|ccbot|ia_archiver|meta-externalagent/i.test(userAgent);
+  const isBot = /googlebot|google-inspectiontool|bingbot|yandexbot|yandex\.com\/bots|duckduckbot|baiduspider|slurp|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|semrushbot|ahrefsbot|mj12bot|dotbot|petalbot|bytespider|gptbot|chatgpt-user|claudebot|anthropic-ai|perplexitybot|ccbot|ia_archiver|meta-externalagent|amazonbot|bingpreview/i.test(userAgent);
 
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "chilmarieshop.top";
-  const protocol = req.headers["x-forwarded-proto"] || "https";
-  const origin = `${protocol}://${host}`;
   const productUrl = `https://chilmarieshop.top/product-view/${id}`;
+  res.setHeader("Vary", "User-Agent");
 
-  // Normal users → SPA shell (keeps URL /product-view/ID)
   if (!isBot) {
     try {
-      const indexRes = await fetch(`${origin}/index.html`, {
-        headers: { "User-Agent": "Chilmari-SEO-Proxy" },
-      });
-      const html = await indexRes.text();
+      const indexPath = join(process.cwd(), "index.html");
+      const html = readFileSync(indexPath, "utf8");
       res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+      res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
       return res.status(200).send(html);
     } catch (e) {
+      console.error("index read error", e);
       res.statusCode = 302;
-      res.setHeader("Location", productUrl);
+      res.setHeader("Location", "/");
       return res.end();
     }
   }
 
-  // Bots → real product HTML from Firestore
   try {
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/chilmarie-shop/databases/(default)/documents/products/${encodeURIComponent(id)}`;
     const response = await fetch(firestoreUrl);
@@ -42,7 +37,7 @@ export default async function handler(req, res) {
     if (!data.fields) {
       res.statusCode = 404;
       res.setHeader("Content-Type", "text/html; charset=utf-8");
-      return res.end(`<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><title>Product Not Found | Chilmari E Shop</title><meta name="robots" content="noindex"><link rel="canonical" href="https://chilmarieshop.top/"></head><body><h1>Product not found</h1><p><a href="https://chilmarieshop.top/">Go to Chilmari E Shop</a></p></body></html>`);
+      return res.end("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Not Found</title><meta name=\"robots\" content=\"noindex\"></head><body><h1>Product not found</h1></body></html>");
     }
 
     const f = data.fields;
@@ -72,7 +67,7 @@ export default async function handler(req, res) {
     const schema = {
       "@context": "https://schema.org/",
       "@type": "Product",
-      name: name,
+      name,
       description: desc.substring(0, 5000),
       image: [image],
       sku: id,
@@ -81,11 +76,8 @@ export default async function handler(req, res) {
         url: productUrl,
         priceCurrency: "BDT",
         price: String(price),
-        availability: availability,
-        seller: {
-          "@type": "Organization",
-          name: "Chilmari E Shop",
-        },
+        availability,
+        seller: { "@type": "Organization", name: "Chilmari E Shop" },
       },
     };
 
@@ -111,7 +103,7 @@ export default async function handler(req, res) {
 <article>
   <h1>${safe(name)}</h1>
   <p><img src="${safe(image)}" alt="${safe(name)}" width="400"></p>
-  <p><strong>Price:</strong> ৳${price}${oldPrice > price ? ` <s>৳${oldPrice}</s>` : ""}</p>
+  <p><strong>Price:</strong> &#2547;${price}${oldPrice > price ? ` <s>&#2547;${oldPrice}</s>` : ""}</p>
   <p><strong>Availability:</strong> ${stock > 0 ? "In Stock" : "Out of Stock"}</p>
   <div>${safe(desc).replace(/\n/g, "<br>")}</div>
   <p><a href="${productUrl}">View / Buy at Chilmari E Shop</a></p>
@@ -120,7 +112,7 @@ export default async function handler(req, res) {
 </html>`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+    res.setHeader("Cache-Control", "public, s-maxage=1800, stale-while-revalidate=86400");
     return res.status(200).send(html);
   } catch (err) {
     console.error("product-seo error:", err);
