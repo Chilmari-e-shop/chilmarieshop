@@ -1653,6 +1653,31 @@
                     <button id="generate-all-seo-btn" class="btn btn-primary" onclick="generateAllSEOPages()">🚀 Generate All SEO Pages</button>
                 </div>
 
+                <!-- Neon Database Tools -->
+                <div class="card" style="margin-top: 1.5rem; border: 1px solid #a5b4fc;">
+                    <h2>🗄️ Neon Database Tools</h2>
+                    <p style="color: var(--text-muted); margin: 0.5rem 0 1rem;">
+                        Firebase-এর সব product এক ক্লিকে Neon-এ sync করুন, অথবা Neon থেকে সব product মুছে ফেলুন।
+                        (Firebase/Firestore data অক্ষত থাকবে — শুধু Neon search DB প্রভাবিত হবে)
+                    </p>
+                    <div id="neon-tools-status" style="display:none; margin-bottom:1rem; padding:0.75rem; border-radius:8px; background:var(--content-bg); border:1px solid var(--border-color); font-size:0.9rem;"></div>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+                        <button class="btn btn-primary" id="neon-sync-all-btn" onclick="syncAllProductsToNeon()">
+                            🔄 Sync All to Neon
+                        </button>
+                        <button class="btn" id="neon-clear-all-btn" onclick="clearAllNeonProducts()"
+                            style="background:#ef4444; color:white;">
+                            🗑️ Delete All from Neon
+                        </button>
+                        <button class="btn btn-secondary" onclick="checkNeonProductCount()">
+                            📊 Check Neon Count
+                        </button>
+                    </div>
+                    <p style="font-size:0.8rem; color:#6b7280; margin-top:0.75rem;">
+                        ⚠️ <strong>Delete All</strong> শুধু Neon table খালি করবে। Firebase products/categories/orders কিছুই মুছবে না।
+                    </p>
+                </div>
+
 <!-- NEW: Analytics Page Section -->
 <section id="analytics" class="page">
     <div class="page-header">
@@ -2238,11 +2263,11 @@ import {
     limit, startAfter, runTransaction 
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
   
- import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-
-const SUPABASE_URL = 'https://dxvtvtzspylltvmeelws.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JkQ00whheSlpwflgbiGGjA_rY5qHEZ0'; // এখানে আপনার Service Role Key দিন (যাতে রাইট পারমিশন থাকে)
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// --- NEON via Vercel API (no direct DB credentials in browser) ---
+const NEON_SEARCH_API = '/api/search';
+const NEON_SYNC_API = '/api/product-sync';
+// Same value as Vercel env ADMIN_SYNC_SECRET (change this to a strong random string)
+window.ADMIN_SYNC_SECRET = window.ADMIN_SYNC_SECRET || 'chilmari-neon-sync-2026';
   
    import { 
             getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut 
@@ -3297,7 +3322,7 @@ document.getElementById('save-product-btn').addEventListener('click', async () =
         }
 
         // --- ব্যাকগ্রাউন্ড টাস্ক (এগুলো লোডিং আটকাবে না) ---
-        syncProductToSupabase(finalId, productData).catch(e => console.log("Supabase sync failed"));
+        syncProductToNeon(finalId, productData).catch(e => console.log("Neon sync failed"));
         generateSEOPage(finalId, productData).catch(e => console.log("SEO page failed"));
 
         closeModal(productModal);
@@ -3636,25 +3661,29 @@ document.getElementById('picker-search-input').addEventListener('keyup', async (
     const resultsDiv = document.getElementById('picker-results');
     if (term.length < 2) return;
 
-    // MiniSearch এর বদলে Supabase ব্যবহার করুন
-    const { data: products, error } = await supabase
-        .from('products')
-        .select('*')
-        .ilike('name', `%${term}%`) // partial search
-        .limit(20);
+    try {
+        const res = await fetch(`${NEON_SEARCH_API}?q=${encodeURIComponent(term)}&limit=20`);
+        const json = await res.json();
+        const products = json.data || [];
 
-    if (error || !products.length) {
-        resultsDiv.innerHTML = '<p style="padding: 10px; text-align: center;">No products found.</p>';
-        return;
+        if (!products.length) {
+            resultsDiv.innerHTML = '<p style="padding: 10px; text-align: center;">No products found.</p>';
+            return;
+        }
+
+        let html = '<ul style="list-style: none; padding: 0;">';
+        products.forEach(p => {
+            const safeName = (p.name || '').replace(/'/g, "\\'");
+            const safeImg = (p.imageurl || '').replace(/'/g, "\\'");
+            html += `<li style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" 
+                     onclick="selectProductForPicker('${p.id}', '${safeName}', '${safeImg}')">
+                     ${p.name} - ৳${p.price}</li>`;
+        });
+        resultsDiv.innerHTML = html + '</ul>';
+    } catch (e) {
+        resultsDiv.innerHTML = '<p style="padding: 10px; text-align: center; color:red;">Search error</p>';
+        console.error(e);
     }
-
-    let html = '<ul style="list-style: none; padding: 0;">';
-    products.forEach(p => {
-        html += `<li style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" 
-                 onclick="selectProductForPicker('${p.id}', '${p.name}', '${p.imageurl}')">
-                 ${p.name} - ৳${p.price}</li>`;
-    });
-    resultsDiv.innerHTML = html + '</ul>';
 });
 
 window.selectProductForPicker = (id, name, image) => {
@@ -3705,7 +3734,10 @@ window.searchProductsForCampaign = async () => {
     if (!q || q.length < 2) { showToast('কমপক্ষে ২ অক্ষর লিখুন!', 'error'); return; }
     resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">খোঁজা হচ্ছে...</p>';
     try {
-        const { data, error } = await supabase.from('products').select('id, name, imageurl, price').ilike('name', `%${q}%`).limit(10);
+        const res = await fetch(`${NEON_SEARCH_API}?q=${encodeURIComponent(q)}&limit=10`);
+        const json = await res.json();
+        const data = json.data || [];
+        const error = null;
         if (error || !data || !data.length) {
             resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো product পাওয়া যায়নি।</p>';
             return;
@@ -4541,17 +4573,120 @@ imageUrlsContainer.addEventListener('change', async (e) => {
 });
 
    // --- REUSABLE GITHUB UPLOAD FUNCTION (NEW) ---
-async function syncProductToSupabase(productId, productData) {
-    const { error } = await supabase
-        .from('products')
-        .upsert({ 
-            id: productId, 
-            name: productData.name,
-            category: productData.category,
-            imageurl: productData.imageUrl,
-            price: productData.basePrice || productData.price
+
+// ========== NEON BULK TOOLS ==========
+const NEON_ADMIN_API = '/api/neon-admin';
+
+function setNeonStatus(msg, isError = false) {
+    const el = document.getElementById('neon-tools-status');
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.color = isError ? '#b91c1c' : 'var(--text-color)';
+    el.style.borderColor = isError ? '#fca5a5' : 'var(--border-color)';
+    el.innerHTML = msg;
+}
+
+window.syncAllProductsToNeon = async function () {
+    if (!confirm('সব product Firebase থেকে Neon-এ sync হবে। চালিয়ে যাবেন?')) return;
+
+    const btn = document.getElementById('neon-sync-all-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
+    setNeonStatus('Firestore থেকে products আনা হচ্ছে এবং Neon-এ লেখা হচ্ছে... অপেক্ষা করুন।');
+
+    try {
+        const res = await fetch(`${NEON_ADMIN_API}?action=sync`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': window.ADMIN_SYNC_SECRET || ''
+            },
+            body: JSON.stringify({ action: 'sync' })
         });
-    if (error) console.error("Supabase Error:", error);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Sync failed');
+
+        setNeonStatus(
+            `✅ Sync সম্পন্ন!<br>` +
+            `মোট: <b>${json.total}</b> &nbsp;|&nbsp; সফল: <b>${json.synced}</b> &nbsp;|&nbsp; ব্যর্থ: <b>${json.failed || 0}</b>`
+        );
+        if (typeof showToast === 'function') showToast(`✅ ${json.synced} products Neon-এ sync হয়েছে`);
+    } catch (e) {
+        console.error(e);
+        setNeonStatus('❌ Sync error: ' + (e.message || e), true);
+        if (typeof showToast === 'function') showToast('Sync failed: ' + e.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 Sync All to Neon'; }
+    }
+};
+
+window.clearAllNeonProducts = async function () {
+    if (!confirm('⚠️ Neon থেকে ALL products মুছে যাবে। Firebase data নিরাপদ থাকবে।\\n\\nনিশ্চিত?')) return;
+    if (!confirm('শেষবার নিশ্চিত করুন — Neon products table সম্পূর্ণ খালি হবে।')) return;
+
+    const btn = document.getElementById('neon-clear-all-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Deleting...'; }
+    setNeonStatus('Neon থেকে সব product মুছে ফেলা হচ্ছে...');
+
+    try {
+        const res = await fetch(NEON_ADMIN_API, {
+            method: 'DELETE',
+            headers: {
+                'x-admin-key': window.ADMIN_SYNC_SECRET || ''
+            }
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Delete failed');
+
+        setNeonStatus(`🗑️ Neon থেকে <b>${json.deleted}</b> টি product মুছে ফেলা হয়েছে।`);
+        if (typeof showToast === 'function') showToast(`Deleted ${json.deleted} from Neon`);
+    } catch (e) {
+        console.error(e);
+        setNeonStatus('❌ Delete error: ' + (e.message || e), true);
+        if (typeof showToast === 'function') showToast('Delete failed: ' + e.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🗑️ Delete All from Neon'; }
+    }
+};
+
+window.checkNeonProductCount = async function () {
+    setNeonStatus('Neon count চেক করা হচ্ছে...');
+    try {
+        const res = await fetch(NEON_ADMIN_API, {
+            method: 'GET',
+            headers: { 'x-admin-key': window.ADMIN_SYNC_SECRET || '' }
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Count failed');
+        setNeonStatus(`📊 Neon-এ বর্তমানে <b>${json.count}</b> টি product আছে।`);
+    } catch (e) {
+        setNeonStatus('❌ Count error: ' + (e.message || e), true);
+    }
+};
+
+async function syncProductToNeon(productId, productData) {
+
+    try {
+        const res = await fetch(NEON_SYNC_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-admin-key': window.ADMIN_SYNC_SECRET || ''
+            },
+            body: JSON.stringify({
+                id: productId,
+                name: productData.name,
+                category: productData.category || null,
+                imageurl: productData.imageUrl || productData.imageurl || null,
+                price: productData.basePrice || productData.price || 0
+            })
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            console.error("Neon sync error:", err.error || res.status);
+        }
+    } catch (e) {
+        console.error("Neon sync failed:", e);
+    }
 }
 
 // =============================================
@@ -4725,7 +4860,13 @@ async function deleteSEOPage(productId) {
                         await deleteDoc(doc(db, "products", currentAction.id));
                         
                         // 🔥🔥🔥 এই লাইনটি নতুন যোগ করা হয়েছে (GitHub অটো আপডেট হবে) 🔥🔥🔥
-                        await supabase.from('products').delete().eq('id', currentAction.id); 
+                        try {
+                            await fetch(`${NEON_SYNC_API}?id=${encodeURIComponent(currentAction.id)}`, {
+                                method: 'DELETE',
+                                headers: { 'x-admin-key': window.ADMIN_SYNC_SECRET || '' }
+                            });
+                        } catch (e) { console.error("Neon delete failed:", e); }
+
                         // SEO Page ও মুছে ফেলো
                         await deleteSEOPage(currentAction.id);
                         // ------------------------------------------------------------
@@ -5595,7 +5736,9 @@ window.deleteReviewItem = async (docPath) => {
             resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">খোঁজা হচ্ছে...</p>';
 
             try {
-                const { data } = await supabase.from('products').select('id, name, imageurl, price').ilike('name', `%${q}%`).limit(10);
+                const res = await fetch(`${NEON_SEARCH_API}?q=${encodeURIComponent(q)}&limit=10`);
+                const json = await res.json();
+                const data = json.data || [];
                 if (!data || data.length === 0) {
                     resultsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো product পাওয়া যায়নি।</p>';
                     return;

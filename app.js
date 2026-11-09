@@ -25,10 +25,9 @@ const firebaseConfig = {
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-// --- SUPABASE CONFIG ---
-const SUPABASE_URL = 'https://dxvtvtzspylltvmeelws.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JkQ00whheSlpwflgbiGGjA_rY5qHEZ0';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); // এখানেও supabaseClient দিন
+// --- NEON SEARCH API (via Vercel serverless) ---
+// Search goes through /api/search → Neon Postgres (no DB credentials in browser)
+const NEON_SEARCH_API = '/api/search';
 
 // Global Variables er niche boshao
 const IMGBB_API_KEY = "97d4b640c4eade4d075a2ac53a11d668"; // ⚠️ Ekhane tomar nijer ImgBB Key boshao
@@ -403,7 +402,7 @@ document.getElementById('review-form').addEventListener('submit', async (e) => {
         showSection('search', query); 
     };
 
-// --- SEARCH FUNCTION (Supabase Version) ---
+// --- SEARCH FUNCTION (Neon Version) ---
 // এই অংশটি ৭৬৩ নম্বর লাইনের দিকে আছে, এটি রিপ্লেস করুন
 const renderSearchPage = async (queryParam, sortType = 'relevance') => {
     const searchTerm = queryParam || currentSearchQuery;
@@ -418,13 +417,12 @@ const renderSearchPage = async (queryParam, sortType = 'relevance') => {
     loading.classList.remove('hidden');
 
     try {
-        // --- আপনি এখানে সাধারণ কুয়েরি রেখে দিয়েছেন, এটি বদলে RPC করতে হবে ---
-        let { data, error } = await supabaseClient
-            .rpc('search_products_v2', { query_text: searchTerm });
+        const res = await fetch(`${NEON_SEARCH_API}?q=${encodeURIComponent(searchTerm)}&limit=40`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Search failed');
 
+        let data = json.data || [];
         loading.classList.add('hidden');
-
-        if (error) throw error;
 
         if (!data || data.length === 0) {
             noResults.classList.remove('hidden');
@@ -451,21 +449,23 @@ document.getElementById('full-search-input').addEventListener('input', debounce(
         return; 
     } 
 
-    const { data } = await supabaseClient
-        .from('products')
-        .select('id, name, imageurl') // এখানে imageurl দিন
-        .ilike('name', `%${queryText}%`)
-        .limit(5);
-    
-    suggestionsBox.innerHTML = data && data.length > 0 
-        ? data.map(r => `
-            <div class="p-3 border-b cursor-pointer hover:bg-gray-100 search-suggestion-item" data-id="${r.id}">
-                <div class="flex items-center gap-2">
-                    <img src="${r.imageurl || r.imageUrl}" class="w-8 h-8 object-cover rounded">
-                    <p class="text-sm font-medium">${r.name}</p>
-                </div>
-            </div>`).join('') 
-        : '';
+    try {
+        const res = await fetch(`${NEON_SEARCH_API}?q=${encodeURIComponent(queryText)}&limit=5`);
+        const json = await res.json();
+        const data = json.data || [];
+        suggestionsBox.innerHTML = data.length > 0 
+            ? data.map(r => `
+                <div class="p-3 border-b cursor-pointer hover:bg-gray-100 search-suggestion-item" data-id="${r.id}">
+                    <div class="flex items-center gap-2">
+                        <img src="${r.imageurl || r.imageUrl || ''}" class="w-8 h-8 object-cover rounded">
+                        <p class="text-sm font-medium">${r.name}</p>
+                    </div>
+                </div>`).join('') 
+            : '';
+    } catch (e) {
+        console.error("Suggestion error:", e);
+        suggestionsBox.innerHTML = '';
+    }
 }, 300));
 
     // --- EXISTING APP LOGIC (UNCHANGED) ---
