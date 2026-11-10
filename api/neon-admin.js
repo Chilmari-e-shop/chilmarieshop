@@ -1,7 +1,9 @@
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
-const ADMIN_SECRET = process.env.ADMIN_SYNC_SECRET || '';
+// Default secret matches owner.html — works even if Vercel env not set
+const DEFAULT_SECRET = 'chilmari-neon-sync-2026';
+const ADMIN_SECRET = process.env.ADMIN_SYNC_SECRET || DEFAULT_SECRET;
 const FIRESTORE_PROJECT = 'chilmarie-shop';
 
 function cors(res) {
@@ -15,9 +17,9 @@ function unauthorized(res) {
 }
 
 function checkAuth(req) {
-  if (!ADMIN_SECRET) return true; // if not set, allow (dev)
   const key = req.headers['x-admin-key'] || '';
-  return key === ADMIN_SECRET;
+  // Accept env secret OR the default hardcoded secret (mobile-friendly)
+  return key === ADMIN_SECRET || key === DEFAULT_SECRET;
 }
 
 /** Fetch all products from Firestore REST (paginated) */

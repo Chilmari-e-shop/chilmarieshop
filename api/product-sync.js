@@ -2,10 +2,9 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
-// Simple shared secret to protect write operations.
-// Set the same value in Vercel env as ADMIN_SYNC_SECRET
-// and in owner.html as window.ADMIN_SYNC_SECRET
-const ADMIN_SECRET = process.env.ADMIN_SYNC_SECRET || '';
+// Default matches owner.html — works even without Vercel env
+const DEFAULT_SECRET = 'chilmari-neon-sync-2026';
+const ADMIN_SECRET = process.env.ADMIN_SYNC_SECRET || DEFAULT_SECRET;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,9 +19,9 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Database not configured' });
   }
 
-  // Protect writes
+  // Protect writes — accept env secret OR default
   const clientKey = req.headers['x-admin-key'] || '';
-  if (ADMIN_SECRET && clientKey !== ADMIN_SECRET) {
+  if (clientKey !== ADMIN_SECRET && clientKey !== DEFAULT_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
